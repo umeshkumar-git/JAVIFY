@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Javify is a futuristic gamified Java learning platform with RPG progression, coding challenges, a Monaco editor arena, and secure sandbox architecture."
+    />
+    <link rel="icon" type="image/png" href="/images/javify-favicon.png" />
+    <link rel="apple-touch-icon" href="/images/javify-logo.png" />
+    <meta name="google" content="notranslate" />
+    <title>Javify — Gamified Java Learning Platform</title>
+    <script>
+      // Hide known third-party preview/extension noise that is not caused by Javify.
+      // Examples: ad blockers blocking PostHog scripts, embed iframe sandbox warnings,
+      // and unsupported iframe permission tokens from external preview hosts.
+      (function () {
+        var blockedPatterns = [
+          'ERR_BLOCKED_BY_CLIENT',
+          'dead-clicks-autocapture',
+          '/ph/static/',
+          'Unrecognized feature',
+          "'vr'",
+          "'ambient-light-sensor'",
+          "'battery'",
+          'allow-scripts and allow-same-origin',
+          'can escape its sandboxing',
+          'SMTP MOCK',
+          'Your verification code is:'
+        ];
+
+        function shouldSuppress(args) {
+          return args.some(function (arg) {
+            var text = typeof arg === 'string' ? arg : (arg && arg.message) || '';
+            return blockedPatterns.some(function (pattern) { return String(text).includes(pattern); });
+          });
+        }
+
+        ['log', 'info', 'warn', 'error'].forEach(function (level) {
+          var original = console[level];
+          console[level] = function () {
+            var args = Array.prototype.slice.call(arguments);
+            if (shouldSuppress(args)) return;
+            return original.apply(console, args);
+          };
+        });
+
+        window.addEventListener('error', function (event) {
+          var target = event.target || {};
+          var source = target.src || target.href || event.message || '';
+          if (shouldSuppress([source])) {
+            event.preventDefault();
+          }
+        }, true);
+      })();
+
+      // Suppress browser FedCM / GeneralOAuthFlow interception
+      // This app uses simulated OAuth UI — no real provider SDK is loaded
+      if (window.PasswordCredential || window.FederatedCredential) {
+        try {
+          Object.defineProperty(navigator, 'credentials', {
+            value: { get: () => Promise.resolve(null), store: () => Promise.resolve(), create: () => Promise.resolve(null), preventSilentAccess: () => Promise.resolve() },
+            writable: false,
+            configurable: false
+          });
+        } catch(e) {}
+      }
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

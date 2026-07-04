@@ -1,0 +1,236 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  STUDENT
+  ADMIN
+  MODERATOR
+}
+
+enum Difficulty {
+  NOVICE
+  SKILLED
+  ELITE
+  BOSS
+}
+
+enum SubmissionResult {
+  PASSED
+  FAILED
+  PARTIAL
+  TIMEOUT
+  COMPILE_ERROR
+  RUNTIME_ERROR
+}
+
+model User {
+  id            String           @id @default(uuid())
+  name          String
+  email         String           @unique
+  password      String
+  role          Role             @default(STUDENT)
+  xp            Int              @default(0)
+  level         Int              @default(1)
+  coins         Int              @default(0)
+  streak        Int              @default(0)
+  avatar        String?
+  emailVerified Boolean          @default(false)
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+  submissions   Submission[]
+  achievements  UserAchievement[]
+  analytics     Analytics[]
+  recommendations Recommendation[]
+  aiInteractions AiInteraction[]
+  battlesAsP1   Battle[]         @relation("BattleP1")
+  battlesAsP2   Battle[]         @relation("BattleP2")
+  sessions      Session[]
+
+  @@index([email])
+  @@index([xp])
+}
+
+model Session {
+  id           String   @id @default(uuid())
+  userId       String
+  refreshToken String   @unique
+  userAgent    String?
+  ipAddress    String?
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model OtpCode {
+  id        String   @id @default(uuid())
+  email     String
+  purpose   String
+  codeHash  String
+  attempts  Int      @default(0)
+  expiresAt DateTime
+  consumed  Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([email, purpose, createdAt])
+}
+
+model Challenge {
+  id                String       @id @default(uuid())
+  title             String
+  description       String       @db.Text
+  difficulty        Difficulty
+  category          String
+  xpReward          Int          @default(100)
+  coinsReward       Int          @default(50)
+  visibleTestCases  Json
+  hiddenTestCases   Json
+  constraints       String?
+  memoryLimit       Int          @default(256)
+  timeLimit         Int          @default(4000)
+  starterCode       String       @db.Text
+  expectedOutput    String?      @db.Text
+  worldId           String?
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+  submissions       Submission[]
+
+  @@index([category])
+  @@index([difficulty])
+}
+
+model Submission {
+  id            String           @id @default(uuid())
+  userId        String
+  challengeId   String
+  code          String           @db.Text
+  language      String           @default("java")
+  result        SubmissionResult
+  score         Int              @default(0)
+  passedTests   Int              @default(0)
+  totalTests    Int              @default(0)
+  executionTime Int?
+  memoryUsage   Int?
+  stdout        String?          @db.Text
+  stderr        String?          @db.Text
+  createdAt     DateTime         @default(now())
+  user          User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  challenge     Challenge        @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([challengeId])
+  @@index([createdAt])
+}
+
+model Achievement {
+  id           String           @id @default(uuid())
+  title        String
+  description  String
+  badge        String
+  xpBonus      Int              @default(0)
+  users        UserAchievement[]
+}
+
+model UserAchievement {
+  id            String      @id @default(uuid())
+  userId        String
+  achievementId String
+  earnedAt      DateTime    @default(now())
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  achievement   Achievement @relation(fields: [achievementId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, achievementId])
+}
+
+model Analytics {
+  id                  String   @id @default(uuid())
+  userId              String?
+  visitorId           String?
+  sessionId           String?
+  path                String
+  timeSpent           Int      @default(0)
+  challengeCompleted  Boolean  @default(false)
+  successRate         Float    @default(0)
+  device              String?
+  referrer            String?
+  ipAddress           String?
+  createdAt           DateTime @default(now())
+  user                User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([visitorId])
+  @@index([createdAt])
+}
+
+model Recommendation {
+  id                  String   @id @default(uuid())
+  userId              String
+  weakTopics          Json
+  strengths           Json
+  suggestedChallenges Json
+  generatedAt         DateTime @default(now())
+  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model AiInteraction {
+  id        String   @id @default(uuid())
+  userId    String
+  challengeId String?
+  prompt    String   @db.Text
+  response  String   @db.Text
+  type      String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([type])
+}
+
+model Battle {
+  id          String       @id @default(uuid())
+  roomCode    String       @unique
+  challengeId String
+  player1Id   String
+  player2Id   String?
+  winnerId    String?
+  status      BattleStatus @default(WAITING)
+  startedAt   DateTime?
+  endedAt     DateTime?
+  createdAt   DateTime     @default(now())
+  player1     User         @relation("BattleP1", fields: [player1Id], references: [id])
+  player2     User?        @relation("BattleP2", fields: [player2Id], references: [id])
+
+  @@index([status])
+}
+
+enum BattleStatus {
+  WAITING
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+model GitHubConnection {
+  id              String   @id @default(uuid())
+  userId          String   @unique
+  githubId        Int      @unique
+  username        String
+  avatarUrl       String?
+  email           String?
+  accessToken     String   @db.Text  // Encrypted with AES-256-GCM before storage
+  repositoryName  String?
+  syncOptions     Json?
+  connectedAt     DateTime @default(now())
+  lastSyncAt      DateTime?
+
+  @@index([username])
+}
