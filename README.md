@@ -350,7 +350,7 @@ This project is licensed under the MIT License.
 
 Computer Science Engineer
 
-Java Developer | Full Stack Developer | UI/UX Enthusiast
+Software Developer | Full Stack Developer | UI/UX Enthusiast
 
 ---
 
