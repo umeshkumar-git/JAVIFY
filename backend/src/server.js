@@ -23,6 +23,7 @@ import { registerBattleSocket } from "./services/battleSocket.service.js";
 import logger from "./utils/logger.js";
 import { successResponse, errorResponse } from "./utils/apiResponse.js";
 import { connectRedis } from "./utils/cache.js";
+import { startWorkers } from "./queue/workers.js";
 
 const app = express();
 const server = http.createServer(app);
@@ -84,9 +85,12 @@ app.use(errorHandler);
 registerBattleSocket(io);
 
 async function startServer() {
-  await connectRedis();
-  const PORT = process.env.PORT || 4000;
-  server.listen(PORT, () => logger.info(`Javify backend listening on :${PORT}`));
+	await connectRedis();
+	await startWorkers();
+	const PORT = process.env.PORT || 4000;
+	server.listen(PORT, () =>
+		logger.info(`Javify backend listening on :${PORT}`),
+	);
 }
 
 startServer();

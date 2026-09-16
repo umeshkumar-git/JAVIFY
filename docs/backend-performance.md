@@ -44,3 +44,30 @@ This is especially valuable for dashboards, challenge listing, and repeat user a
 - Redis runs via the project Docker stack on `localhost:6379` by default.
 - If Redis is unavailable, the backend gracefully falls back to the existing Prisma queries without crashing.
 - Cache misses still hit the database normally; only the hot path is accelerated.
+
+## Asynchronous task queue (BullMQ + Redis)
+
+JAVIFY now moves long-running side effects outside the request/response path to Redis-backed BullMQ workers.
+
+### Moved to background jobs
+
+- OTP email delivery (`send-otp-email`)
+- external API synchronization jobs (`provider-sync`)
+- report generation jobs (`generate-report`)
+
+These jobs are queued immediately from the API layer and processed by dedicated workers so the user-facing endpoints remain responsive.
+
+### Retry and reliability policy
+
+Each queue job uses:
+
+- `attempts: 5`
+- exponential backoff starting at 2s, doubling on each retry
+- per-job timeout of 30s
+- a shared DLQ queue for jobs failing after all retries
+
+When a worker exhausts retries, the failed payload is persisted to the `dead-letter-queue` with metadata such as queue name, job name, failure reason, stack trace, and attempt count.
+
+### Why this matters
+
+This decouples latency-sensitive API work from slow or flaky downstream systems such as SMTP delivery and external provider calls, while preserving fault tolerance and operational observability.

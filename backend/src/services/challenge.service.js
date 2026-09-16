@@ -35,7 +35,11 @@ export async function getChallengeById(id) {
 		async () => {
 			const found = await challengeRepository.findById(id);
 			if (!found) {
-				throw new AppError("Challenge not found.", 404, "CHALLENGE_NOT_FOUND");
+				throw new AppError(
+					"Challenge not found.",
+					404,
+					"CHALLENGE_NOT_FOUND",
+				);
 			}
 			return toPublicChallengeDto(found);
 		},
