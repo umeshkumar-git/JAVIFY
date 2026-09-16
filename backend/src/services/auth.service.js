@@ -8,8 +8,8 @@ import {
 	signRefreshToken,
 	verifyRefreshToken,
 } from "./token.service.js";
-import { sendOtpEmail } from "./email.service.js";
 import logger from "../utils/logger.js";
+import { enqueueOtpEmail } from "./queue.service.js";
 
 const OTP_TTL_MS = 5 * 60 * 1000;
 const MAX_OTP_ATTEMPTS = 5;
@@ -32,8 +32,8 @@ export async function requestOtp(email, purpose = "register") {
 		expiresAt,
 	});
 
-	await sendOtpEmail(normalized, code);
-	logger.info("OTP issued", {
+	await enqueueOtpEmail(normalized, code);
+	logger.info("OTP queued for delivery", {
 		module: "auth.service",
 		action: "otp.request",
 		email: normalized,
