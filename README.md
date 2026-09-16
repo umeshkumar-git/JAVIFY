@@ -10,6 +10,27 @@ A modern gamified Java learning platform that helps students master Java program
 
 ---
 
+# ⚡ Quick Start
+
+**New here?** Start with [START_HERE.md](START_HERE.md) to get up and running in 10 minutes!
+
+| Document | Purpose |
+|----------|---------|
+| [START_HERE.md](START_HERE.md) | 👈 **Start here!** Complete setup guide |
+| [QUICK_START.md](QUICK_START.md) | 5-minute quick setup |
+| [SETUP.md](SETUP.md) | Detailed setup & troubleshooting |
+| [POSTGRES_SETUP.md](POSTGRES_SETUP.md) | Database installation guide |
+
+**TL;DR:**
+```bash
+# Install PostgreSQL, then:
+cd backend && npm run dev    # Terminal 1
+npm run dev                  # Terminal 2
+# Visit: http://localhost:5173
+```
+
+---
+
 # 📖 Overview
 
 Javify is an interactive web platform designed to make learning Java fun, engaging, and practical.

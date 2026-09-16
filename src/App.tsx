@@ -247,7 +247,7 @@ function BrandMark({ size = "md", animated = false }: { size?: "sm" | "md" | "lg
       <div
         aria-hidden
         className={cn(
-          "absolute -inset-2 rounded-3xl bg-gradient-to-br from-fuchsia-500/40 via-violet-500/30 to-cyan-500/40 blur-xl",
+          "absolute -inset-2 rounded-3xl bg-linear-to-br from-fuchsia-500/40 via-violet-500/30 to-cyan-500/40 blur-xl",
           animated && "animate-pulse"
         )}
       />
@@ -414,7 +414,7 @@ function AiAssistantDock() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 16, scale: 0.96 }}
             transition={{ duration: 0.22, ease: "easeOut" }}
-            className="fixed bottom-22 left-4 right-4 z-[120] flex max-h-[min(72vh,560px)] flex-col overflow-hidden rounded-[28px] border border-white/10 shadow-[0_28px_80px_rgba(0,0,0,0.5)] sm:bottom-26 sm:left-auto sm:right-6 sm:w-[390px]"
+            className="fixed bottom-22 left-4 right-4 z-120 flex max-h-[min(72vh,560px)] flex-col overflow-hidden rounded-[28px] border border-white/10 shadow-[0_28px_80px_rgba(0,0,0,0.5)] sm:bottom-26 sm:left-auto sm:right-6 sm:w-[390px]"
             style={{
               background: "linear-gradient(180deg, rgba(11,16,32,0.98), rgba(15,23,42,0.98))",
               backdropFilter: "blur(18px)",
@@ -424,7 +424,7 @@ function AiAssistantDock() {
             {/* Header */}
             <div className="flex items-center justify-between gap-3 border-b border-white/8 px-4 py-3.5 sm:px-5">
               <div className="flex min-w-0 items-center gap-3">
-                <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-600 to-cyan-500 shadow-[0_8px_20px_rgba(34,211,238,0.22)]">
+                <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-linear-to-br from-violet-600 to-cyan-500 shadow-[0_8px_20px_rgba(34,211,238,0.22)]">
                   <svg viewBox="0 0 24 24" className="h-4.5 w-4.5 fill-white" aria-hidden>
                     <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
                   </svg>
@@ -464,7 +464,7 @@ function AiAssistantDock() {
             </div>
 
             {/* Status / context row */}
-            <div className="flex items-center justify-between gap-3 border-b border-white/5 bg-white/[0.02] px-4 py-2 text-[11px] sm:px-5">
+            <div className="flex items-center justify-between gap-3 border-b border-white/5 bg-white/2 px-4 py-2 text-[11px] sm:px-5">
               <div className="flex items-center gap-2 text-emerald-400">
                 <span className={cn("h-2 w-2 rounded-full", isTyping ? "animate-pulse bg-emerald-400" : "bg-emerald-400")} />
                 <span>{isTyping ? "Assistant is replying…" : "Assistant online"}</span>
@@ -486,7 +486,7 @@ function AiAssistantDock() {
                     className={cn(
                       "mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[11px] font-bold text-white shadow-sm",
                       msg.role === "mentor"
-                        ? "bg-gradient-to-br from-violet-600 to-cyan-500"
+                        ? "bg-linear-to-br from-violet-600 to-cyan-500"
                         : "bg-slate-500"
                     )}
                   >
@@ -511,7 +511,7 @@ function AiAssistantDock() {
 
               {isTyping ? (
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex gap-2.5">
-                  <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-violet-600 to-cyan-500 text-[11px] font-bold text-white">AI</div>
+                  <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-linear-to-br from-violet-600 to-cyan-500 text-[11px] font-bold text-white">AI</div>
                   <div className="rounded-2xl rounded-tl-md border border-white/8 bg-white/5 px-4 py-3">
                     <div className="flex gap-1.5">
                       <span className="h-2 w-2 rounded-full bg-slate-500 animate-bounce" style={{ animationDelay: "0ms" }} />
@@ -524,7 +524,7 @@ function AiAssistantDock() {
             </div>
 
             {/* Quick actions */}
-            <div className="flex gap-1.5 overflow-x-auto border-t border-white/5 bg-white/[0.02] px-3 py-2.5 custom-scrollbar sm:px-4">
+            <div className="flex gap-1.5 overflow-x-auto border-t border-white/5 bg-white/2 px-3 py-2.5 custom-scrollbar sm:px-4">
               {quickPrompts.map((prompt) => (
                 <button
                   key={prompt}
@@ -573,10 +573,10 @@ function AiAssistantDock() {
         whileHover={{ scale: 1.06 }}
         whileTap={{ scale: 0.96 }}
         className={cn(
-          "fixed bottom-5 right-5 z-[130] flex h-14 w-14 items-center justify-center rounded-full text-white shadow-[0_10px_32px_rgba(124,58,237,0.45)] transition sm:bottom-8 sm:right-6",
+          "fixed bottom-5 right-5 z-130 flex h-14 w-14 items-center justify-center rounded-full text-white shadow-[0_10px_32px_rgba(124,58,237,0.45)] transition sm:bottom-8 sm:right-6",
           open
             ? "border border-white/15 bg-white/10 backdrop-blur-xl"
-            : "bg-gradient-to-br from-violet-600 to-cyan-500"
+            : "bg-linear-to-br from-violet-600 to-cyan-500"
         )}
         aria-label={open ? "Close AI assistant" : "Open AI assistant"}
       >
@@ -647,7 +647,7 @@ function MetricCard({ label, value, helper, accent }: { label: string; value: st
 function FloatingBackground() {
   return (
     <div className="pointer-events-none absolute inset-0 overflow-hidden scene-3d">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(108,99,255,0.25),_transparent_28%),radial-gradient(circle_at_bottom_right,_rgba(0,217,255,0.18),_transparent_30%),linear-gradient(180deg,_#0b1020,_#0f172a_55%,_#111827)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(108,99,255,0.25),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(0,217,255,0.18),transparent_30%),linear-gradient(180deg,#0b1020,#0f172a_55%,#111827)]" />
       <div className="grid-overlay absolute inset-0 opacity-30" />
       {/* Holographic 3D floor grid */}
       <div className="holo-floor" />
@@ -681,7 +681,7 @@ function FloatingBackground() {
           );
         })}
       </div>
-      <div className="absolute inset-x-0 top-0 h-80 bg-[radial-gradient(circle_at_center,_rgba(168,85,247,0.24),_transparent_65%)]" />
+      <div className="absolute inset-x-0 top-0 h-80 bg-[radial-gradient(circle_at_center,rgba(168,85,247,0.24),transparent_65%)]" />
     </div>
   );
 }
@@ -996,7 +996,7 @@ function LandingPage({ nextChallengeId }: { nextChallengeId: string | undefined 
         </div>
 
         <GlassPanel className="relative overflow-hidden p-6 md:p-8">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(139,92,246,0.16),_transparent_55%),radial-gradient(circle_at_bottom_right,_rgba(0,217,255,0.16),_transparent_40%)]" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(139,92,246,0.16),transparent_55%),radial-gradient(circle_at_bottom_right,rgba(0,217,255,0.16),transparent_40%)]" />
           <div className="relative space-y-6">
             <div className="flex items-start justify-between gap-4">
               <div>
@@ -1029,7 +1029,7 @@ function LandingPage({ nextChallengeId }: { nextChallengeId: string | undefined 
               ))}
             </div>
 
-            <div className="rounded-[24px] border border-white/10 bg-[#0c142b]/70 p-4">
+            <div className="rounded-3xl border border-white/10 bg-[#0c142b]/70 p-4">
               <div className="mb-4 flex items-center justify-between text-sm text-slate-300">
                 <span>Progression Flow</span>
                 <span className="text-cyan-300">Java Apprentice → Grandmaster</span>
@@ -1042,7 +1042,7 @@ function LandingPage({ nextChallengeId }: { nextChallengeId: string | undefined 
                       <div className="mt-2 text-xs font-medium uppercase tracking-[0.18em] text-slate-400">World {index + 1}</div>
                       <div className="mt-1">{world.name}</div>
                     </div>
-                    {index < worlds.length - 1 ? <div className="h-px w-8 bg-gradient-to-r from-cyan-400/60 to-fuchsia-500/60" /> : null}
+                    {index < worlds.length - 1 ? <div className="h-px w-8 bg-linear-to-r from-cyan-400/60 to-fuchsia-500/60" /> : null}
                   </div>
                 ))}
               </div>
@@ -1140,7 +1140,7 @@ function LandingPage({ nextChallengeId }: { nextChallengeId: string | undefined 
         <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
           {worlds.map((world, index) => (
             <GlassPanel key={world.id} tilt className="relative overflow-hidden p-6">
-              <div className={cn("absolute inset-0 bg-gradient-to-br opacity-60", world.gradient)} />
+              <div className={cn("absolute inset-0 bg-linear-to-br opacity-60", world.gradient)} />
               <div className="relative" style={{ transformStyle: "preserve-3d" }}>
                 <div className="flex items-start justify-between gap-4">
                   <div>
@@ -1498,10 +1498,10 @@ function AuthPage() {
   if (verificationStep === "code") {
     return (
       <div className="relative flex min-h-[80vh] items-center justify-center">
-        <div className="absolute inset-0 bg-gradient-to-br from-violet-600/20 via-cyan-500/10 to-fuchsia-500/20 blur-3xl" />
+        <div className="absolute inset-0 bg-linear-to-br from-violet-600/20 via-cyan-500/10 to-fuchsia-500/20 blur-3xl" />
         <GlassPanel className="relative w-full max-w-md p-6 sm:p-8">
           <div className="text-center">
-            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-600 to-cyan-500 shadow-[0_8px_24px_rgba(139,92,246,0.4)]">
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-linear-to-br from-violet-600 to-cyan-500 shadow-[0_8px_24px_rgba(139,92,246,0.4)]">
               <svg viewBox="0 0 24 24" className="h-8 w-8 fill-white">
                 <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H5.17L4 17.17V4h16v12z" />
                 <path d="M12 10H8v2h4v-2zm6 0h-4v2h4v-2zm-9-3H8v2h1V7zm3 0h-1v2h1V7zm3 0h-1v2h1V7z" />
@@ -1803,7 +1803,7 @@ function AuthPage() {
       {/* Marketing side: hidden on small screens to keep login front-and-center. */}
       <div className="order-2 hidden flex-col gap-5 lg:flex">
         <GlassPanel className="relative overflow-hidden p-7 md:p-8">
-          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(139,92,246,0.18),_transparent_55%)]" />
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(139,92,246,0.18),transparent_55%)]" />
           <div className="relative space-y-5">
             <div className="inline-flex items-center gap-2 rounded-full border border-fuchsia-400/20 bg-fuchsia-500/10 px-3 py-1.5 text-[10px] uppercase tracking-[0.28em] text-fuchsia-200">
               <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-fuchsia-300" />
@@ -1868,7 +1868,7 @@ function AuthPage() {
 
       {/* ═══ Google Account Picker Modal ═══ */}
       {showGooglePicker && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+        <div className="fixed inset-0 z-200 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
           <motion.div
             initial={{ opacity: 0, scale: 0.92, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -1898,7 +1898,7 @@ function AuthPage() {
                   onClick={() => handleGoogleAccountSelect(account)}
                   className="group flex w-full items-center gap-3.5 rounded-2xl px-4 py-3.5 text-left transition-all hover:bg-white/8"
                 >
-                  <div className={cn("flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br text-sm font-bold text-white", account.color)}>
+                  <div className={cn("flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-linear-to-br text-sm font-bold text-white", account.color)}>
                     {account.avatar}
                   </div>
                   <div className="min-w-0 flex-1">
@@ -1941,7 +1941,7 @@ function AuthPage() {
             </div>
 
             {/* Footer */}
-            <div className="border-t border-white/5 bg-white/[0.02] px-6 py-3">
+            <div className="border-t border-white/5 bg-white/2 px-6 py-3">
               <p className="text-[10px] text-slate-500 text-center">
                 Javify uses a secure authorization flow. Your credentials are processed locally in this demo.
               </p>
@@ -1952,7 +1952,7 @@ function AuthPage() {
 
       {/* ═══ GitHub Account Picker Modal ═══ */}
       {showGitHubPicker && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+        <div className="fixed inset-0 z-200 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
           <motion.div
             initial={{ opacity: 0, scale: 0.92, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -1982,7 +1982,7 @@ function AuthPage() {
                   onClick={() => handleGitHubAccountSelect(account)}
                   className="group flex w-full items-center gap-3.5 rounded-2xl px-4 py-3.5 text-left transition-all hover:bg-white/8"
                 >
-                  <div className={cn("flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br text-sm font-bold text-white", account.color)}>
+                  <div className={cn("flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-linear-to-br text-sm font-bold text-white", account.color)}>
                     {account.avatar}
                   </div>
                   <div className="min-w-0 flex-1">
@@ -1991,11 +1991,11 @@ function AuthPage() {
                   </div>
                   <svg viewBox="0 0 24 24" className="h-4 w-4 shrink-0 fill-slate-600 group-hover:fill-white transition-colors"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z"/></svg>
                 </button>
-              ))}
+              ))}  
             </div>
 
             {/* Footer */}
-            <div className="border-t border-white/5 bg-white/[0.02] px-6 py-3">
+            <div className="border-t border-white/5 bg-white/2 px-6 py-3">
               <p className="text-[10px] text-slate-500 text-center">
                 Javify requests read-only access to your GitHub profile. No repository access required.
               </p>
@@ -2046,7 +2046,7 @@ function DashboardPage() {
     <div className="space-y-8 pb-10">
       <section className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
         <GlassPanel className="relative overflow-hidden p-6 md:p-8">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(0,217,255,0.16),_transparent_35%),radial-gradient(circle_at_bottom_right,_rgba(255,77,157,0.18),_transparent_32%)]" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(0,217,255,0.16),transparent_35%),radial-gradient(circle_at_bottom_right,rgba(255,77,157,0.18),transparent_32%)]" />
           <div className="relative flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
             <div className="max-w-2xl space-y-4">
               <div className="flex items-center gap-4">
@@ -2089,7 +2089,7 @@ function DashboardPage() {
           <p className="text-xs uppercase tracking-[0.34em] text-fuchsia-300">Continue Learning</p>
           <h2 className="mt-4 text-2xl font-semibold text-white">Current world: {activeWorld.name}</h2>
           <p className="mt-3 text-sm leading-7 text-slate-300">{activeWorld.summary}</p>
-          <div className="mt-6 space-y-3 rounded-[24px] border border-white/10 bg-white/5 p-5">
+          <div className="mt-6 space-y-3 rounded-3xl border border-white/10 bg-white/5 p-5">
             <div className="flex items-center justify-between gap-4">
               <div>
                 <div className="text-sm text-slate-400">Next mission</div>
@@ -2119,7 +2119,7 @@ function DashboardPage() {
 
       {/* Total Visitors Section */}
       <GlassPanel className="p-6 md:p-8 relative overflow-hidden border-cyan-500/20">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_rgba(0,217,255,0.15),_transparent_50%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(0,217,255,0.15),transparent_50%)]" />
         <div className="relative flex flex-col md:flex-row md:items-center md:justify-between gap-6">
           <div>
             <p className="text-xs uppercase tracking-[0.34em] text-cyan-300">Platform Telemetry</p>
@@ -2293,7 +2293,7 @@ function WorldMapPage() {
       />
 
       <div className="relative mx-auto max-w-5xl">
-        <div className="absolute left-1/2 top-10 hidden h-[calc(100%-5rem)] w-px -translate-x-1/2 bg-gradient-to-b from-cyan-400/60 via-violet-500/50 to-fuchsia-500/60 lg:block" />
+        <div className="absolute left-1/2 top-10 hidden h-[calc(100%-5rem)] w-px -translate-x-1/2 bg-linear-to-b from-cyan-400/60 via-violet-500/50 to-fuchsia-500/60 lg:block" />
         <div className="space-y-6">
           {worlds.map((world, index) => {
             const unlocked = isWorldUnlocked(index, completedChallengeIds);
@@ -2311,7 +2311,7 @@ function WorldMapPage() {
                       isActive && "shadow-[0_0_40px_rgba(0,217,255,0.12)]"
                     )}
                   >
-                    <div className={cn("absolute inset-0 bg-gradient-to-br opacity-70", world.gradient)} />
+                    <div className={cn("absolute inset-0 bg-linear-to-br opacity-70", world.gradient)} />
                     <div className="relative">
                       <div className="flex flex-wrap items-start justify-between gap-4">
                         <div>
@@ -2534,7 +2534,7 @@ function ChallengePage() {
 
           <p className="mt-5 text-sm leading-7 text-slate-300">{activeChallenge.description}</p>
 
-          <div className="mt-6 rounded-[24px] border border-white/10 bg-white/5 p-5">
+          <div className="mt-6 rounded-3xl border border-white/10 bg-white/5 p-5">
             <div className="text-sm font-medium text-white">Mission briefing</div>
             <p className="mt-2 text-sm leading-7 text-slate-300">{activeChallenge.mission}</p>
             <div className="mt-5 space-y-3">
@@ -2548,18 +2548,18 @@ function ChallengePage() {
           </div>
 
           <div className="mt-6 grid gap-4 md:grid-cols-2">
-            <div className="rounded-[24px] border border-white/10 bg-white/5 p-5">
+            <div className="rounded-3xl border border-white/10 bg-white/5 p-5">
               <div className="text-sm font-medium text-white">Rewards</div>
               <p className="mt-3 text-sm text-slate-300">+{activeChallenge.xpReward} XP</p>
               <p className="mt-1 text-sm text-slate-300">+{activeChallenge.coinsReward} Coins</p>
             </div>
-            <div className="rounded-[24px] border border-white/10 bg-white/5 p-5">
+            <div className="rounded-3xl border border-white/10 bg-white/5 p-5">
               <div className="text-sm font-medium text-white">Expected Output</div>
               <pre className="mt-3 whitespace-pre-wrap font-mono text-sm text-cyan-200">{activeChallenge.expectedOutput}</pre>
             </div>
           </div>
 
-          <div className="mt-6 rounded-[24px] border border-white/10 bg-white/5 p-5">
+          <div className="mt-6 rounded-3xl border border-white/10 bg-white/5 p-5">
             <div className="text-sm font-medium text-white">Hidden test preview</div>
             <div className="mt-4 space-y-2">
               {activeChallenge.hiddenTests.map((test) => (
@@ -2664,7 +2664,7 @@ function ChallengePage() {
                   {statusTone}
                 </div>
               </div>
-              <div className="mt-5 rounded-[24px] border border-white/10 bg-[#0b1020]/80 p-5">
+              <div className="mt-5 rounded-3xl border border-white/10 bg-[#0b1020]/80 p-5">
                 <pre className="min-h-40 whitespace-pre-wrap font-mono text-sm leading-7 text-slate-200">{consoleOutput}</pre>
               </div>
               <div className="mt-5 grid gap-3">
@@ -2679,7 +2679,7 @@ function ChallengePage() {
             <GlassPanel className="p-6">
               <div className="text-xs uppercase tracking-[0.34em] text-fuchsia-300">AI Mentor</div>
               <div className="mt-2 text-lg font-medium text-white">Guided feedback, not full answers</div>
-              <div className="mt-5 rounded-[24px] border border-white/10 bg-white/5 p-5 text-sm leading-7 text-slate-300">
+              <div className="mt-5 rounded-3xl border border-white/10 bg-white/5 p-5 text-sm leading-7 text-slate-300">
                 {mentorText}
               </div>
 
