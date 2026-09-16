@@ -9,6 +9,7 @@ export const env = {
   JWT_ACCESS_TTL: process.env.JWT_ACCESS_TTL ?? "15m",
   JWT_REFRESH_TTL: process.env.JWT_REFRESH_TTL ?? "30d",
   CORS_ORIGIN: process.env.CORS_ORIGIN ?? "http://localhost:5173",
+  REDIS_URL: process.env.REDIS_URL ?? "redis://localhost:6379",
   SMTP_HOST: process.env.SMTP_HOST,
   SMTP_PORT: parseInt(process.env.SMTP_PORT ?? "587", 10),
   SMTP_USER: process.env.SMTP_USER,
