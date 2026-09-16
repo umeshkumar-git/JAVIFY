@@ -21,29 +21,40 @@ import githubRoutes from "./routes/github.routes.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 import { registerBattleSocket } from "./services/battleSocket.service.js";
 import logger from "./utils/logger.js";
+import { successResponse, errorResponse } from "./utils/apiResponse.js";
 
 const app = express();
 const server = http.createServer(app);
 
 const io = new SocketServer(server, {
-  cors: { origin: process.env.CORS_ORIGIN?.split(",") ?? "*", credentials: true },
+	cors: {
+		origin: process.env.CORS_ORIGIN?.split(",") ?? "*",
+		credentials: true,
+	},
 });
 
 app.use(helmet());
-app.use(cors({ origin: process.env.CORS_ORIGIN?.split(",") ?? "*", credentials: true }));
+app.use(
+	cors({
+		origin: process.env.CORS_ORIGIN?.split(",") ?? "*",
+		credentials: true,
+	}),
+);
 app.use(express.json({ limit: "1mb" }));
 app.use(cookieParser());
 app.use(morgan("combined"));
 
 const generalLimiter = rateLimit({
-  windowMs: 60 * 1000,
-  max: 120,
-  standardHeaders: true,
-  legacyHeaders: false,
+	windowMs: 60 * 1000,
+	max: 120,
+	standardHeaders: true,
+	legacyHeaders: false,
 });
 app.use("/api/", generalLimiter);
 
-app.get("/api/health", (_req, res) => res.json({ status: "ok", timestamp: Date.now() }));
+app.get("/api/health", (_req, res) =>
+	res.json(successResponse({ status: "ok", timestamp: Date.now() })),
+);
 
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
@@ -57,6 +68,15 @@ app.use("/api/battles", battleRoutes);
 
 // GitHub OAuth uses the /auth namespace per spec (popup redirect)
 app.use("/auth/github", githubRoutes);
+
+app.use((req, res) => {
+	res.status(404).json(
+		errorResponse(
+			"ROUTE_NOT_FOUND",
+			`Route ${req.originalUrl} was not found.`,
+		),
+	);
+});
 
 app.use(errorHandler);
 
