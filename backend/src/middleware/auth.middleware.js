@@ -16,6 +16,7 @@ export function requireAuth(req, _res, next) {
 		req.user = payload;
 		next();
 	} catch (error) {
+		void error;
 		return next(
 			new AppError("Invalid or expired token.", 401, "AUTH_INVALID"),
 		);

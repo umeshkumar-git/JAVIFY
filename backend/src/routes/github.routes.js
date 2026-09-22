@@ -47,7 +47,7 @@ function requireGitHubConfig() {
 }
 
 /* ─── Start OAuth flow ─────────────────────────────────────────────── */
-router.get("/", requireAuth, (req, res, next) => {
+router.get("/", requireAuth, (req, res, _next) => {
   try {
     requireGitHubConfig();
     // State encodes a CSRF nonce + the authenticated user id so the callback
@@ -62,7 +62,7 @@ router.get("/", requireAuth, (req, res, next) => {
     });
     res.json({ url: buildOAuthUrl(state) });
   } catch (err) {
-    next(err);
+    _next(err);
   }
 });
 

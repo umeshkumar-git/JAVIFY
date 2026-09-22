@@ -1,0 +1,66 @@
+name: CI / Production Quality Pipeline
+
+on:
+  push:
+    branches: ["main", "master", "develop"]
+  pull_request:
+
+jobs:
+  frontend-ci:
+    name: Frontend Quality & Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: TypeScript type-check
+        run: npx tsc --noEmit
+
+      - name: Run unit & architecture tests
+        run: npm test
+
+      - name: Build production bundle
+        run: npm run build
+
+  backend-ci:
+    name: Backend Quality & Tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint code
+        run: npm run lint
+
+      - name: Run unit and integration tests
+        run: npm test
+
+      - name: Check coverage threshold
+        run: npm run test:coverage
+
+      - name: Build Docker image
+        run: docker build -t javify-backend:ci -f Dockerfile .
