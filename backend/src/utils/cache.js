@@ -146,3 +146,166 @@ export async function withCache(key, ttlSeconds, loader, metadata = {}) {
 
 	return value;
 }
+
+/**
+ * In-memory fallback map for SWR caching when Redis is offline.
+ * Map<string, { value: any, expiresAt: number, staleExpiresAt: number }>
+ */
+const inMemorySwrStore = new Map();
+const inFlightLoaders = new Map();
+
+/**
+ * Acquires a distributed lock with automatic TTL expiration.
+ * @param {string} lockKey
+ * @param {number} ttlSeconds
+ * @returns {Promise<boolean>}
+ */
+export async function acquireDistributedLock(lockKey, ttlSeconds = 10) {
+	if (await isCacheEnabled()) {
+		try {
+			const result = await redisClient.set(lockKey, "locked", {
+				NX: true,
+				EX: ttlSeconds,
+			});
+			return result === "OK";
+		} catch {
+			return true; // Fail open
+		}
+	}
+	return true;
+}
+
+export async function releaseDistributedLock(lockKey) {
+	if (await isCacheEnabled()) {
+		try {
+			await redisClient.del(lockKey);
+		} catch {
+			// Ignore cleanup error
+		}
+	}
+}
+
+/**
+ * Tier-1 Stale-While-Revalidate (SWR) Cache with Thundering Herd Mutex Protection.
+ *
+ * @param {string} key - Cache identifier
+ * @param {number} freshTtlSeconds - Duration payload is considered fresh
+ * @param {number} staleTtlSeconds - Additional window during which stale data can be served
+ * @param {() => Promise<any>} loader - Upstream fetcher
+ * @param {Object} [metadata] - Logging metadata
+ */
+export async function withSwrCache(
+	key,
+	freshTtlSeconds,
+	staleTtlSeconds,
+	loader,
+	metadata = {},
+) {
+	const now = Date.now();
+	const lockKey = `lock:swr:${key}`;
+	const totalTtl = freshTtlSeconds + staleTtlSeconds;
+
+	// 1. Try reading from Redis or Memory
+	let cachedPayload = null;
+	if (await isCacheEnabled()) {
+		cachedPayload = await getCachedValue(`swr:${key}`);
+	} else {
+		const mem = inMemorySwrStore.get(key);
+		if (mem && mem.staleExpiresAt > now) {
+			cachedPayload = mem;
+		}
+	}
+
+	// 2. Evaluate fresh vs stale
+	if (
+		cachedPayload &&
+		cachedPayload.expiresAt &&
+		cachedPayload.value !== undefined
+	) {
+		if (now < cachedPayload.expiresAt) {
+			// Fresh Hit
+			logger.info("SWR cache hit (fresh)", {
+				module: "cache",
+				action: "swr.fresh_hit",
+				key,
+				...metadata,
+			});
+			return cachedPayload.value;
+		}
+
+		// Stale Hit: Serve immediately and trigger background revalidation
+		logger.info(
+			"SWR cache hit (stale serving, background refresh triggered)",
+			{
+				module: "cache",
+				action: "swr.stale_serve",
+				key,
+				...metadata,
+			},
+		);
+
+		// Background asynchronous revalidation with distributed lock
+		(async () => {
+			const lockAcquired = await acquireDistributedLock(lockKey, 15);
+			if (!lockAcquired) {
+				// Another instance is already revalidating
+				return;
+			}
+			try {
+				const freshValue = await loader();
+				const swrRecord = {
+					value: freshValue,
+					expiresAt: Date.now() + freshTtlSeconds * 1000,
+					staleExpiresAt: Date.now() + totalTtl * 1000,
+				};
+				if (await isCacheEnabled()) {
+					await setCachedValue(`swr:${key}`, swrRecord, totalTtl);
+				} else {
+					inMemorySwrStore.set(key, swrRecord);
+				}
+			} catch (err) {
+				logger.warn("SWR background revalidation failed", {
+					key,
+					error: err.message,
+				});
+			} finally {
+				await releaseDistributedLock(lockKey);
+			}
+		})();
+
+		return cachedPayload.value;
+	}
+
+	// 3. Cache Miss: Synchronous load with distributed lock & single-flight coalescing
+	const inFlightKey = `inflight:${key}`;
+	if (inFlightLoaders.has(inFlightKey)) {
+		return inFlightLoaders.get(inFlightKey);
+	}
+
+	const loadPromise = (async () => {
+		const lockAcquired = await acquireDistributedLock(lockKey, 15);
+		try {
+			const value = await loader();
+			const swrRecord = {
+				value,
+				expiresAt: Date.now() + freshTtlSeconds * 1000,
+				staleExpiresAt: Date.now() + totalTtl * 1000,
+			};
+			if (await isCacheEnabled()) {
+				await setCachedValue(`swr:${key}`, swrRecord, totalTtl);
+			} else {
+				inMemorySwrStore.set(key, swrRecord);
+			}
+			return value;
+		} finally {
+			if (lockAcquired) {
+				await releaseDistributedLock(lockKey);
+			}
+			inFlightLoaders.delete(inFlightKey);
+		}
+	})();
+
+	inFlightLoaders.set(inFlightKey, loadPromise);
+	return loadPromise;
+}
+

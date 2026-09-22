@@ -1,5 +1,11 @@
 import { useEffect, useRef } from "react";
-import { useAudioStore } from "../../store/useAudioStore";
+import {
+  useAudioStore,
+  useCurrentTrack,
+  usePlaybackStatus,
+  useAudioVolume,
+  usePlaybackModes,
+} from "../../store/useAudioStore";
 import { useSessionStore } from "../../store/useSessionStore";
 import { AudioVisualizerRenderer } from "../../core/audio/AudioVisualizer";
 
@@ -11,21 +17,18 @@ function formatTime(seconds: number): string {
 }
 
 export function AudioPlayerBar() {
-  const {
-    currentTrack,
-    status,
-    currentTime,
-    duration,
-    volume,
-    isMuted,
-    togglePlayPause,
-    seek,
-    setVolume,
-    toggleMute,
-    nextTrack,
-    previousTrack,
-    pipeline,
-  } = useAudioStore();
+  const currentTrack = useCurrentTrack();
+  const status = usePlaybackStatus();
+  const { volume, isMuted, setVolume, toggleMute } = useAudioVolume();
+  const { repeatMode, isShuffled, toggleShuffle, cycleRepeatMode } = usePlaybackModes();
+
+  const currentTime = useAudioStore((s) => s.currentTime);
+  const duration = useAudioStore((s) => s.duration);
+  const togglePlayPause = useAudioStore((s) => s.togglePlayPause);
+  const seek = useAudioStore((s) => s.seek);
+  const nextTrack = useAudioStore((s) => s.nextTrack);
+  const previousTrack = useAudioStore((s) => s.previousTrack);
+  const pipeline = useAudioStore((s) => s.pipeline);
 
   const {
     session,
@@ -103,6 +106,21 @@ export function AudioPlayerBar() {
         {/* Center Controls & Scrubber */}
         <div className="flex flex-1 flex-col items-center max-w-2xl px-2">
           <div className="flex items-center gap-4 mb-1.5">
+            {/* Shuffle Button */}
+            <button
+              onClick={toggleShuffle}
+              className={`p-1.5 rounded-lg transition-all ${
+                isShuffled
+                  ? "text-cyan-400 bg-cyan-500/15 shadow-sm shadow-cyan-500/25"
+                  : "text-slate-400 hover:text-white"
+              }`}
+              title={isShuffled ? "Shuffle: Enabled" : "Shuffle: Disabled"}
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+              </svg>
+            </button>
+
             <button
               onClick={previousTrack}
               className="text-slate-400 hover:text-white transition-colors p-1"
@@ -137,6 +155,26 @@ export function AudioPlayerBar() {
               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z" />
               </svg>
+            </button>
+
+            {/* Repeat Button */}
+            <button
+              onClick={cycleRepeatMode}
+              className={`relative p-1.5 rounded-lg transition-all ${
+                repeatMode !== "OFF"
+                  ? "text-cyan-400 bg-cyan-500/15 shadow-sm shadow-cyan-500/25"
+                  : "text-slate-400 hover:text-white"
+              }`}
+              title={`Repeat: ${repeatMode}`}
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              {repeatMode === "ONE" && (
+                <span className="absolute -top-1 -right-1 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-cyan-400 text-[8px] font-bold text-slate-950">
+                  1
+                </span>
+              )}
             </button>
           </div>
 

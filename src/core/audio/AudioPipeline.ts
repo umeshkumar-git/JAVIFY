@@ -54,6 +54,7 @@ export class AudioPipeline implements AudioControlTarget {
    */
   public async init(): Promise<void> {
     if (this.isInitialized) return;
+    if (typeof window === "undefined") return;
 
     const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
     if (!AudioContextClass) {
