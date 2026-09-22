@@ -102,4 +102,38 @@ describe("useAudioStore (Decoupled Audio Engine State)", () => {
     useAudioStore.getState().toggleMute();
     expect(useAudioStore.getState().isMuted).toBe(false);
   });
+
+  it("exposes isPlaying state and handles seek and stop", () => {
+    useAudioStore.setState({ isPlaying: true, status: "PLAYING", duration: 200 });
+
+    expect(useAudioStore.getState().isPlaying).toBe(true);
+
+    useAudioStore.getState().seek(45);
+    expect(useAudioStore.getState().currentTime).toBe(45);
+
+    useAudioStore.getState().stop();
+    expect(useAudioStore.getState().isPlaying).toBe(false);
+    expect(useAudioStore.getState().currentTime).toBe(0);
+    expect(useAudioStore.getState().currentTrack).toBeNull();
+  });
+
+  it("supports transient progress subscription without triggering store re-renders", () => {
+    let observedProgress = { currentTime: 0, duration: 0, percent: 0 };
+    const unsubscribe = useAudioStore.subscribe(
+      (s) => ({ currentTime: s.currentTime, duration: s.duration }),
+      ({ currentTime, duration }) => {
+        observedProgress = {
+          currentTime,
+          duration,
+          percent: duration > 0 ? (currentTime / duration) * 100 : 0,
+        };
+      }
+    );
+
+    useAudioStore.setState({ currentTime: 50, duration: 100 });
+    expect(observedProgress.currentTime).toBe(50);
+    expect(observedProgress.percent).toBe(50);
+
+    unsubscribe();
+  });
 });
