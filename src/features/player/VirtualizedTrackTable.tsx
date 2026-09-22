@@ -7,6 +7,7 @@ import { AdaptiveImage } from "../../core/media/AdaptiveImage";
 import { useDebounce } from "../../hooks/useDebounce";
 import { formatDuration } from "../../utils/formatters";
 import { Trie, type SuggestionMetadata } from "../../core/trie/Trie";
+import { TracklistSkeleton } from "../../components/ui/SkeletonLoader";
 
 export function VirtualizedTrackTable() {
   const {
@@ -404,109 +405,113 @@ export function VirtualizedTrackTable() {
           <div className="text-center">Offline</div>
         </div>
 
-        {/* 60fps DOM Recycled Virtual List */}
-        <VirtualList
-          items={filteredTracks}
-          itemHeight={64}
-          containerHeight={520}
-          overscan={3}
-          onMetricsChange={setMetrics}
-          getItemKey={(track) => track.id}
-          renderItem={(track, index) => {
-            const isPlayingThis = currentTrack?.id === track.id && status === "PLAYING";
-            const isSelected = currentTrack?.id === track.id;
-            const isCached = cachedTrackIds.has(track.id);
+        {/* 60fps DOM Recycled Virtual List / Enterprise Skeleton Loader */}
+        {isLoading ? (
+          <TracklistSkeleton rows={7} showHeader={false} />
+        ) : (
+          <VirtualList
+            items={filteredTracks}
+            itemHeight={64}
+            containerHeight={520}
+            overscan={3}
+            onMetricsChange={setMetrics}
+            getItemKey={(track) => track.id}
+            renderItem={(track, index) => {
+              const isPlayingThis = currentTrack?.id === track.id && status === "PLAYING";
+              const isSelected = currentTrack?.id === track.id;
+              const isCached = cachedTrackIds.has(track.id);
 
-            return (
-              <div
-                className={`grid grid-cols-[50px_2.5fr_2fr_1.5fr_80px_100px] items-center px-6 transition-colors border-b border-white/5 group ${
-                  isSelected ? "bg-cyan-500/10" : "hover:bg-white/5"
-                }`}
-                style={{ height: 64 }}
-              >
-                {/* Index / Play Button */}
-                <div className="flex items-center text-xs font-mono text-slate-400">
-                  <button
-                    data-testid="play-track-row"
-                    aria-label={`Play ${track.title}`}
-                    onClick={() => handlePlayRow(track, index)}
-                    className="flex h-7 w-7 items-center justify-center rounded-lg bg-white/5 group-hover:bg-cyan-500 group-hover:text-slate-950 transition-all text-slate-300"
-                  >
-                    {isPlayingThis ? (
-                      <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
-                        <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
-                      </svg>
-                    ) : (
-                      <svg className="w-3.5 h-3.5 fill-current translate-x-0.5" viewBox="0 0 24 24">
-                        <path d="M8 5v14l11-7z" />
-                      </svg>
-                    )}
-                  </button>
-                </div>
+              return (
+                <div
+                  className={`grid grid-cols-[50px_2.5fr_2fr_1.5fr_80px_100px] items-center px-6 transition-colors border-b border-white/5 group ${
+                    isSelected ? "bg-cyan-500/10" : "hover:bg-white/5"
+                  }`}
+                  style={{ height: 64 }}
+                >
+                  {/* Index / Play Button */}
+                  <div className="flex items-center text-xs font-mono text-slate-400">
+                    <button
+                      data-testid="play-track-row"
+                      aria-label={`Play ${track.title}`}
+                      onClick={() => handlePlayRow(track, index)}
+                      className="flex h-7 w-7 items-center justify-center rounded-lg bg-white/5 group-hover:bg-cyan-500 group-hover:text-slate-950 transition-all text-slate-300"
+                    >
+                      {isPlayingThis ? (
+                        <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
+                          <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
+                        </svg>
+                      ) : (
+                        <svg className="w-3.5 h-3.5 fill-current translate-x-0.5" viewBox="0 0 24 24">
+                          <path d="M8 5v14l11-7z" />
+                        </svg>
+                      )}
+                    </button>
+                  </div>
 
-                {/* Title + Artwork with AdaptiveImage (WebP + Skeleton + IntersectionObserver) */}
-                <div className="flex items-center gap-3 truncate pr-4">
-                  <AdaptiveImage
-                    src={track.coverUrl}
-                    alt={track.title}
-                    fallbackIconText={track.artist}
-                    width={80}
-                    quality={80}
-                    className="h-10 w-10 shrink-0 rounded-lg border border-white/10"
-                  />
-                  <div className="truncate">
-                    <div
-                      className={`truncate text-sm font-medium ${
-                        isSelected ? "text-cyan-300 font-semibold" : "text-white"
+                  {/* Title + Artwork with AdaptiveImage (WebP + Skeleton + IntersectionObserver) */}
+                  <div className="flex items-center gap-3 truncate pr-4">
+                    <AdaptiveImage
+                      src={track.coverUrl}
+                      alt={track.title}
+                      fallbackIconText={track.artist}
+                      width={80}
+                      quality={80}
+                      className="h-10 w-10 shrink-0 rounded-lg border border-white/10"
+                    />
+                    <div className="truncate">
+                      <div
+                        className={`truncate text-sm font-medium ${
+                          isSelected ? "text-cyan-300 font-semibold" : "text-white"
+                        }`}
+                      >
+                        {track.title}
+                      </div>
+                      <div className="truncate text-xs text-slate-400">{track.album || "Single"}</div>
+                    </div>
+                  </div>
+
+                  {/* Artist */}
+                  <div className="truncate text-xs text-slate-300 pr-4">{track.artist}</div>
+
+                  {/* Genre */}
+                  <div className="hidden sm:block truncate pr-4">
+                    <span className="rounded-full bg-white/5 px-2.5 py-1 text-[11px] text-slate-300 border border-white/10">
+                      {track.genre || "Electronic"}
+                    </span>
+                  </div>
+
+                  {/* Duration */}
+                  <div className="text-right text-xs font-mono text-slate-400">
+                    {formatDuration(track.duration)}
+                  </div>
+
+                  {/* Offline Cache Button */}
+                  <div className="flex justify-center">
+                    <button
+                      onClick={() => toggleCacheTrack(track)}
+                      title={isCached ? "Remove from IndexedDB cache" : "Cache offline via IndexedDB"}
+                      className={`rounded-lg p-1.5 transition-all ${
+                        isCached
+                          ? "text-emerald-400 bg-emerald-500/10 border border-emerald-500/20"
+                          : "text-slate-500 hover:text-slate-300 hover:bg-white/5"
                       }`}
                     >
-                      {track.title}
-                    </div>
-                    <div className="truncate text-xs text-slate-400">{track.album || "Single"}</div>
+                      {isCached ? (
+                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                        </svg>
+                      ) : (
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                        </svg>
+                      )}
+                    </button>
                   </div>
                 </div>
-
-                {/* Artist */}
-                <div className="truncate text-xs text-slate-300 pr-4">{track.artist}</div>
-
-                {/* Genre */}
-                <div className="hidden sm:block truncate pr-4">
-                  <span className="rounded-full bg-white/5 px-2.5 py-1 text-[11px] text-slate-300 border border-white/10">
-                    {track.genre || "Electronic"}
-                  </span>
-                </div>
-
-                {/* Duration */}
-                <div className="text-right text-xs font-mono text-slate-400">
-                  {formatDuration(track.duration)}
-                </div>
-
-                {/* Offline Cache Button */}
-                <div className="flex justify-center">
-                  <button
-                    onClick={() => toggleCacheTrack(track)}
-                    title={isCached ? "Remove from IndexedDB cache" : "Cache offline via IndexedDB"}
-                    className={`rounded-lg p-1.5 transition-all ${
-                      isCached
-                        ? "text-emerald-400 bg-emerald-500/10 border border-emerald-500/20"
-                        : "text-slate-500 hover:text-slate-300 hover:bg-white/5"
-                    }`}
-                  >
-                    {isCached ? (
-                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                      </svg>
-                    ) : (
-                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                      </svg>
-                    )}
-                  </button>
-                </div>
-              </div>
-            );
-          }}
-        />
+              );
+            }}
+          />
+        )}
       </div>
     </div>
   );

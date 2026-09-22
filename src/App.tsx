@@ -52,6 +52,7 @@ import CertificateSharePage from "./features/certifications/CertificateSharePage
 import StreamingHubPage from "./pages/StreamingHubPage";
 import { AudioPlayerBar } from "./features/player/AudioPlayerBar";
 import { ListenTogetherModal } from "./features/player/ListenTogetherModal";
+import { AmbientBackground } from "./components/ui/AmbientBackground";
 
 const navigation = [
   { label: "Home", to: "/" },
@@ -750,6 +751,7 @@ function AppLayout() {
   return (
     <div className="relative min-h-screen overflow-hidden bg-[#0B1020] text-white scene-3d">
       <FloatingBackground />
+      <AmbientBackground />
       <div className="relative z-10 mx-auto flex min-h-screen max-w-7xl flex-col px-3 pb-12 sm:px-6 lg:px-8">
         <header className="sticky top-3 z-30 pt-3 sm:top-4 sm:pt-4">
           <GlassPanel className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-3 py-3 sm:px-6">
