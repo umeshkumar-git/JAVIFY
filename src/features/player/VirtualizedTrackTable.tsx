@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useLibraryStore } from "../../store/useLibraryStore";
 import { useAudioStore } from "../../store/useAudioStore";
 import { VirtualList, type VirtualListMetrics } from "../../core/virtual/VirtualList";
@@ -6,6 +6,7 @@ import { AudioTrack } from "../../core/audio/AudioPipeline";
 import { AdaptiveImage } from "../../core/media/AdaptiveImage";
 import { useDebounce } from "../../hooks/useDebounce";
 import { formatDuration } from "../../utils/formatters";
+import { Trie, type SuggestionMetadata } from "../../core/trie/Trie";
 
 export function VirtualizedTrackTable() {
   const {
@@ -38,6 +39,63 @@ export function VirtualizedTrackTable() {
 
   const [localSearch, setLocalSearch] = useState(searchQuery);
   const [metrics, setMetrics] = useState<VirtualListMetrics | null>(null);
+  const [suggestions, setSuggestions] = useState<SuggestionMetadata[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const searchContainerRef = useRef<HTMLDivElement | null>(null);
+
+  // Client-side Trie (Prefix Tree) built over current catalog and search history
+  const trie = useMemo(() => {
+    const t = new Trie();
+    try {
+      const history = JSON.parse(localStorage.getItem("javify_search_history") || "[]");
+      if (Array.isArray(history)) {
+        history.slice(0, 10).forEach((q: string) => t.indexSearchHistory(q));
+      }
+    } catch {
+      // ignore
+    }
+    tracks.forEach((trk) => t.indexTrack(trk));
+    return t;
+  }, [tracks]);
+
+  // Real-time O(L) prefix suggestion calculation
+  useEffect(() => {
+    const trimmed = localSearch.trim();
+    if (trimmed.length >= 1) {
+      const results = trie.getSuggestions(trimmed, 6);
+      setSuggestions(results);
+    } else {
+      setSuggestions([]);
+    }
+  }, [localSearch, trie]);
+
+  // Click outside listener to dismiss suggestions
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (
+        searchContainerRef.current &&
+        !searchContainerRef.current.contains(e.target as Node)
+      ) {
+        setShowSuggestions(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const handleSelectSuggestion = (suggestion: SuggestionMetadata) => {
+    setLocalSearch(suggestion.displayText);
+    setSearchQuery(suggestion.displayText);
+    setShowSuggestions(false);
+    try {
+      const existing = JSON.parse(localStorage.getItem("javify_search_history") || "[]");
+      const updated = [suggestion.displayText, ...existing.filter((q: string) => q !== suggestion.displayText)].slice(0, 10);
+      localStorage.setItem("javify_search_history", JSON.stringify(updated));
+      trie.indexSearchHistory(suggestion.displayText);
+    } catch {
+      // ignore
+    }
+  };
 
   // Debounced search to prevent main-thread freezing and API hammering
   const debouncedSearch = useDebounce(localSearch, 250);
@@ -253,13 +311,17 @@ export function VirtualizedTrackTable() {
         </div>
       )}
 
-      {/* Search Input Bar with Debounce Indicator */}
-      <div className="relative">
+      {/* Search Input Bar with Debounce Indicator & Trie Autocomplete */}
+      <div ref={searchContainerRef} className="relative">
         <input
           data-testid="track-search-input"
           type="text"
           value={localSearch}
-          onChange={(e) => setLocalSearch(e.target.value)}
+          onFocus={() => setShowSuggestions(true)}
+          onChange={(e) => {
+            setLocalSearch(e.target.value);
+            setShowSuggestions(true);
+          }}
           placeholder={`Search across ${tracks.length.toLocaleString()} tracks by title, artist, or genre...`}
           className="w-full rounded-2xl border border-white/10 bg-black/40 px-4 py-3.5 pl-11 pr-28 text-sm text-white placeholder-slate-500 focus:border-cyan-400 focus:outline-none transition-colors"
         />
@@ -284,6 +346,7 @@ export function VirtualizedTrackTable() {
               onClick={() => {
                 setLocalSearch("");
                 setSearchQuery("");
+                setShowSuggestions(false);
               }}
               className="text-xs font-mono text-slate-400 hover:text-white transition-colors"
               title="Clear search"
@@ -292,6 +355,41 @@ export function VirtualizedTrackTable() {
             </button>
           ) : null}
         </div>
+
+        {/* Real-Time Trie Suggestions Dropdown */}
+        {showSuggestions && suggestions.length > 0 && (
+          <div
+            data-testid="trie-suggestions-dropdown"
+            className="absolute left-0 right-0 top-full mt-2 z-40 overflow-hidden rounded-2xl border border-cyan-500/30 bg-slate-950/95 backdrop-blur-xl shadow-2xl shadow-cyan-950/50"
+          >
+            <div className="flex items-center justify-between border-b border-white/10 px-4 py-2 text-[10px] font-mono text-slate-400 uppercase tracking-wider">
+              <span>⚡ Trie Autocomplete (O(L) Prefix Tree)</span>
+              <span className="text-cyan-400 font-semibold">{suggestions.length} matches</span>
+            </div>
+            <div className="max-h-60 overflow-y-auto p-1.5 space-y-1">
+              {suggestions.map((item, idx) => (
+                <button
+                  key={`${item.type}-${item.displayText}-${idx}`}
+                  type="button"
+                  onClick={() => handleSelectSuggestion(item)}
+                  className="flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2 text-left text-xs transition-colors hover:bg-cyan-500/15 group"
+                >
+                  <div className="flex items-center gap-2.5 truncate">
+                    <span className="text-sm">
+                      {item.type === "history" ? "🕒" : item.type === "artist" ? "👤" : item.type === "genre" ? "🏷️" : "🎵"}
+                    </span>
+                    <span className="truncate text-slate-200 group-hover:text-white font-medium">
+                      {item.displayText}
+                    </span>
+                  </div>
+                  <span className="shrink-0 rounded px-1.5 py-0.5 text-[9px] font-mono uppercase text-slate-400 border border-white/10 group-hover:border-cyan-400/40 group-hover:text-cyan-300">
+                    {item.type}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Virtualized Table Container */}
