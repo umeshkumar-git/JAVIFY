@@ -8,6 +8,7 @@ import {
   usePlaybackModes,
 } from "../../store/useAudioStore";
 import { useSessionStore } from "../../store/useSessionStore";
+import { useLibraryStore } from "../../store/useLibraryStore";
 import { AudioVisualizerRenderer } from "../../core/audio/AudioVisualizer";
 
 function formatTime(seconds: number): string {
@@ -38,11 +39,13 @@ export function AudioPlayerBar() {
     setModalOpen,
     broadcastAction,
   } = useSessionStore();
+  const isCached = currentTrack ? useLibraryStore((s) => s.cachedTrackIds.has(currentTrack.id)) : false;
+  const isOnline = useLibraryStore((s) => s.isOnline);
 
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const visualizerRef = useRef<AudioVisualizerRenderer | null>(null);
 
-  // Bind 60fps spectrum visualizer to AnalyserNode
+  // Initialize canvas visualizer
   useEffect(() => {
     const analyser = pipeline.getAnalyserNode();
     if (canvasRef.current && analyser && status === "PLAYING") {
@@ -90,8 +93,26 @@ export function AudioPlayerBar() {
           />
 
           <div className="truncate">
-            <div className="truncate text-sm font-semibold text-white">
-              {currentTrack?.title || "No track loaded"}
+            <div className="flex items-center gap-1.5 truncate">
+              <span className="truncate text-sm font-semibold text-white">
+                {currentTrack?.title || "No track loaded"}
+              </span>
+              {isCached && (
+                <span
+                  className="shrink-0 rounded bg-emerald-500/20 px-1.5 py-0.5 text-[9px] font-mono font-bold text-emerald-300 border border-emerald-500/30"
+                  title="Cached offline in IndexedDB & Service Worker"
+                >
+                  OFFLINE
+                </span>
+              )}
+              {!isOnline && !isCached && currentTrack && (
+                <span
+                  className="shrink-0 rounded bg-red-500/20 px-1.5 py-0.5 text-[9px] font-mono font-bold text-red-300 border border-red-500/30"
+                  title="Requires internet connection"
+                >
+                  NO NET
+                </span>
+              )}
             </div>
             <div className="truncate text-xs text-slate-400">
               {currentTrack?.artist || "Select a stream from library"}

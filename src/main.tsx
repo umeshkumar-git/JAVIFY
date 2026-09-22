@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import "./index.css";
 import App from "./App";
+import { registerServiceWorker } from "./core/offline/serviceWorkerRegistration";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -20,3 +21,6 @@ createRoot(document.getElementById("root")!).render(
     </QueryClientProvider>
   </StrictMode>
 );
+
+// Register Tier-1 Service Worker for offline shell & audio caching
+registerServiceWorker();

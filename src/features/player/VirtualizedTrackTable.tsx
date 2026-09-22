@@ -23,12 +23,20 @@ export function VirtualizedTrackTable() {
     cachedTrackIds,
     storageUsage,
     isLoading,
+    isOnline,
+    isSimulatedOffline,
+    filterOfflineOnly,
+    isDownloadingAll,
+    downloadProgress,
     setSearchQuery,
     generate10kTracksBenchmark,
     loadStandardCatalog,
     loadBffCharts,
     toggleCacheTrack,
     initializeLibrary,
+    toggleOfflineSimulation,
+    toggleFilterOfflineOnly,
+    downloadAllOffline,
   } = useLibraryStore();
 
   const { currentTrack, status, setQueue } = useAudioStore();
@@ -73,36 +81,86 @@ export function VirtualizedTrackTable() {
                 BFF SWR Cached
               </span>
             )}
+            {!isOnline && (
+              <span className="rounded-full bg-red-500/20 px-2 py-0.5 text-[11px] font-mono font-bold text-red-300 border border-red-500/40 animate-pulse">
+                Offline Mode
+              </span>
+            )}
           </div>
           <h2 className="mt-1 text-2xl font-bold text-white tracking-tight">
             Distributed Track Library
           </h2>
           <p className="mt-1 text-xs text-slate-400 max-w-xl">
-            Powered by windowed virtual DOM recycling. Capable of smoothly scrolling 10,000+ items at 60 FPS with steady sub-20MB DOM memory footprint.
+            Powered by windowed virtual DOM recycling, Service Worker asset caching, and an IndexedDB binary store for true zero-network audio playback.
           </p>
         </div>
 
         {/* Catalog Switches & Benchmark Controls */}
         <div className="flex flex-wrap items-center gap-2.5">
-          {is10kBenchmarkActive || isBffChartsActive ? (
+          {is10kBenchmarkActive || isBffChartsActive || filterOfflineOnly ? (
             <button
               onClick={handleResetCatalog}
               className="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold text-slate-300 hover:bg-white/10 transition-all"
             >
-              Reset to Standard Catalog
+              Reset Catalog
             </button>
           ) : null}
+
+          {/* Simulate Offline Mode Toggle */}
+          <button
+            onClick={toggleOfflineSimulation}
+            className={`flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-semibold font-mono transition-all border ${
+              isSimulatedOffline
+                ? "bg-red-500/25 text-red-300 border-red-500/50 shadow-md shadow-red-950/40"
+                : "bg-white/5 text-slate-300 border-white/10 hover:bg-white/10"
+            }`}
+            title="Simulate network loss to verify Service Worker & IndexedDB offline playback"
+          >
+            <span className={`h-2 w-2 rounded-full ${isSimulatedOffline ? "bg-red-400 animate-ping" : "bg-emerald-400"}`} />
+            <span>{isSimulatedOffline ? "Offline Sim Active" : "⚡ Simulate Offline"}</span>
+          </button>
+
+          {/* Download All for Offline */}
+          <button
+            onClick={downloadAllOffline}
+            disabled={isDownloadingAll || !isOnline}
+            className={`flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-semibold transition-all border ${
+              isDownloadingAll
+                ? "bg-cyan-500/20 text-cyan-300 border-cyan-500/40 cursor-wait"
+                : "bg-white/5 text-slate-300 border-white/10 hover:bg-white/10 active:scale-95 disabled:opacity-40"
+            }`}
+            title="Pre-cache track audio streams into IndexedDB for zero-network playback"
+          >
+            {isDownloadingAll ? (
+              <span>⏳ {downloadProgress?.percent}% ({downloadProgress?.current}/{downloadProgress?.total})</span>
+            ) : (
+              <span>📥 Download All ({Math.min(tracks.length, 15)})</span>
+            )}
+          </button>
+
+          {/* Offline Playable Only Filter Switch */}
+          <button
+            onClick={toggleFilterOfflineOnly}
+            className={`flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-semibold transition-all border ${
+              filterOfflineOnly
+                ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/40"
+                : "bg-white/5 text-slate-400 border-white/10 hover:text-white"
+            }`}
+          >
+            <span>💾 Offline Only</span>
+            {filterOfflineOnly && <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />}
+          </button>
 
           <button
             onClick={() => {
               setLocalSearch("");
               loadBffCharts();
             }}
-            disabled={isLoading || isBffChartsActive}
+            disabled={isLoading || isBffChartsActive || !isOnline}
             className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-semibold transition-all ${
               isBffChartsActive
                 ? "bg-amber-500/20 text-amber-300 border border-amber-500/40 cursor-default"
-                : "bg-gradient-to-r from-amber-500 to-orange-600 text-slate-950 hover:opacity-95 shadow-lg shadow-amber-500/20 active:scale-95"
+                : "bg-gradient-to-r from-amber-500 to-orange-600 text-slate-950 hover:opacity-95 shadow-lg shadow-amber-500/20 active:scale-95 disabled:opacity-40"
             }`}
           >
             <span>{isLoading ? "⚡ Fetching BFF..." : "🔥 Top Charts (BFF & SWR)"}</span>
@@ -129,6 +187,22 @@ export function VirtualizedTrackTable() {
         </div>
       </div>
 
+      {/* Offline Status Callout Banner */}
+      {!isOnline && (
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 rounded-2xl border border-red-500/30 bg-red-500/10 px-5 py-3 text-xs text-red-200 backdrop-blur-md animate-pulse">
+          <div className="flex items-center gap-2.5">
+            <span className="h-2.5 w-2.5 rounded-full bg-red-400" />
+            <span className="font-semibold font-mono">OFFLINE MODE ACTIVE:</span>
+            <span>
+              {isSimulatedOffline ? "Network loss simulated." : "No internet connection."} Serving UI shell & audio streams directly via Service Worker and IndexedDB.
+            </span>
+          </div>
+          <div className="font-mono text-[11px] text-red-300/90">
+            {cachedTrackIds.size} tracks cached locally with zero network latency
+          </div>
+        </div>
+      )}
+
       {/* Live FAANG Performance & DOM Profiler HUD */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 rounded-2xl border border-cyan-500/20 bg-gradient-to-r from-cyan-950/40 via-slate-900/60 to-indigo-950/40 p-4 font-mono text-xs backdrop-blur-md shadow-lg shadow-cyan-950/20">
         <div className="flex flex-col">
@@ -142,11 +216,13 @@ export function VirtualizedTrackTable() {
         </div>
 
         <div className="flex flex-col">
-          <span className="text-[10px] uppercase tracking-wider text-slate-400">Memory Saved</span>
+          <span className="text-[10px] uppercase tracking-wider text-slate-400">Offline Engine</span>
           <span className="mt-1 text-base font-bold text-emerald-300">
-            ~{metrics ? `${metrics.estimatedMemorySavedMB} MB` : "98.5 MB"}
+            {isOnline ? "SW Cache-First" : "100% Offline"}
           </span>
-          <span className="text-[10px] text-emerald-400/80">Sub-20MB DOM Tree</span>
+          <span className="text-[10px] text-emerald-400/80">
+            {cachedTrackIds.size} Blobs in IndexedDB
+          </span>
         </div>
 
         <div className="flex flex-col">
