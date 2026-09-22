@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { AdaptiveImage } from "../../core/media/AdaptiveImage";
 import {
   useAudioStore,
   useCurrentTrack,
@@ -79,19 +80,14 @@ export function AudioPlayerBar() {
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4">
         {/* Track Metadata */}
         <div className="flex items-center gap-3.5 min-w-[200px] max-w-[280px]">
-          {currentTrack?.coverUrl ? (
-            <img
-              src={currentTrack.coverUrl}
-              alt={currentTrack.title}
-              className="h-12 w-12 shrink-0 rounded-lg object-cover shadow-md border border-white/10"
-            />
-          ) : (
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-cyan-950/40 border border-cyan-500/30 text-cyan-400">
-              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
-              </svg>
-            </div>
-          )}
+          <AdaptiveImage
+            src={currentTrack?.coverUrl}
+            alt={currentTrack?.title || "Track Cover"}
+            fallbackIconText={currentTrack?.artist}
+            width={96}
+            quality={85}
+            className="h-12 w-12 shrink-0 rounded-lg shadow-md border border-white/10"
+          />
 
           <div className="truncate">
             <div className="truncate text-sm font-semibold text-white">
