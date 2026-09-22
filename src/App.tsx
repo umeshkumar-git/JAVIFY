@@ -53,10 +53,12 @@ import StreamingHubPage from "./pages/StreamingHubPage";
 import { AudioPlayerBar } from "./features/player/AudioPlayerBar";
 import { ListenTogetherModal } from "./features/player/ListenTogetherModal";
 import { AmbientBackground } from "./components/ui/AmbientBackground";
+import { AppLayout as EnterpriseStudioLayout } from "./components/layout/AppLayout";
 
 const navigation = [
   { label: "Home", to: "/" },
   { label: "🎵 Stream & Sync", to: "/stream" },
+  { label: "🎛️ 3-Col Studio", to: "/studio" },
   { label: "Dashboard", to: "/dashboard" },
   { label: "World Map", to: "/map" },
   { label: "🎮 Arena", to: "/arena" },
@@ -708,6 +710,11 @@ function AppLayout() {
     setMobileNavOpen(false);
     recordVisit(location.pathname);
   }, [location.pathname]);
+
+  // Dedicated 3-Column Enterprise Studio Environment (AppLayout)
+  if (location.pathname === "/studio") {
+    return <EnterpriseStudioLayout />;
+  }
 
   // Login-first experience: when not authenticated, the auth screen is the entry.
   if (!isAuthenticated) {
