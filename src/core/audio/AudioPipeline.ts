@@ -56,7 +56,10 @@ export class AudioPipeline implements AudioControlTarget {
     if (this.isInitialized) return;
     if (typeof window === "undefined") return;
 
-    const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+    interface WebkitWindow extends Window {
+      webkitAudioContext?: typeof AudioContext;
+    }
+    const AudioContextClass = window.AudioContext || (window as unknown as WebkitWindow).webkitAudioContext;
     if (!AudioContextClass) {
       throw new Error("Web Audio API is not supported in this browser.");
     }

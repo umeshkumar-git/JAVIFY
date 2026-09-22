@@ -6,6 +6,7 @@ import {
 } from "../core/sync/SessionClient";
 import { ClockSyncMetrics } from "../core/sync/ClockSync";
 import { DriftDiagnosis } from "../core/sync/DriftCompensator";
+import { AudioTrack } from "../core/audio/AudioPipeline";
 import { useAudioStore } from "./useAudioStore";
 
 interface SessionStoreState {
@@ -23,7 +24,7 @@ interface SessionStoreState {
   createSession: (username?: string) => Promise<void>;
   joinSession: (sessionId: string, username?: string) => Promise<void>;
   leaveSession: () => void;
-  broadcastAction: (action: "PLAY" | "PAUSE" | "SEEK" | "TRACK_CHANGE", positionMs: number, track?: any) => void;
+  broadcastAction: (action: "PLAY" | "PAUSE" | "SEEK" | "TRACK_CHANGE", positionMs: number, track?: AudioTrack | null) => void;
   setModalOpen: (open: boolean) => void;
   clearError: () => void;
 }
@@ -88,8 +89,9 @@ export const useSessionStore = create<SessionStoreState>((set, get) => ({
       const currentTrack = useAudioStore.getState().currentTrack;
       const session = await client.createSession(`usr_${Date.now()}`, username, currentTrack || undefined);
       set({ session, isHost: true, errorMessage: null });
-    } catch (err: any) {
-      set({ errorMessage: err.message || "Failed to create session" });
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Failed to create session";
+      set({ errorMessage: message });
     }
   },
 
@@ -98,8 +100,9 @@ export const useSessionStore = create<SessionStoreState>((set, get) => ({
       const client = get().initClient();
       const session = await client.joinSession(sessionId.trim(), `usr_${Date.now()}`, username);
       set({ session, isHost: false, errorMessage: null });
-    } catch (err: any) {
-      set({ errorMessage: err.message || "Failed to join session" });
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Failed to join session";
+      set({ errorMessage: message });
     }
   },
 

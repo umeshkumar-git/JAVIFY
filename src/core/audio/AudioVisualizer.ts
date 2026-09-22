@@ -5,13 +5,13 @@
  */
 export class AudioVisualizerRenderer {
   private rafId: number | null = null;
-  private frequencyData: Uint8Array | null = null;
+  private frequencyData: Uint8Array<ArrayBuffer> | null = null;
 
   constructor(
     private readonly canvas: HTMLCanvasElement,
     private readonly analyser: AnalyserNode
   ) {
-    this.frequencyData = new Uint8Array(this.analyser.frequencyBinCount);
+    this.frequencyData = new Uint8Array(new ArrayBuffer(this.analyser.frequencyBinCount));
   }
 
   public start(): void {
@@ -21,7 +21,7 @@ export class AudioVisualizerRenderer {
 
     const renderFrame = () => {
       if (!this.frequencyData) return;
-      this.analyser.getByteFrequencyData(this.frequencyData as any);
+      this.analyser.getByteFrequencyData(this.frequencyData);
 
       const width = this.canvas.width;
       const height = this.canvas.height;

@@ -36,7 +36,7 @@ export interface AudioControlTarget {
 export class DriftCompensator {
   private lastEvaluatedSeq = -1;
   private currentMode: CompensationMode = "IN_SYNC";
-  private checkIntervalTimer: any = null;
+  private checkIntervalTimer: ReturnType<typeof setInterval> | null = null;
   private currentTarget: SyncTargetState | null = null;
 
   // Thresholds in milliseconds

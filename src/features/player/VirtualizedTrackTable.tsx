@@ -5,12 +5,7 @@ import { VirtualList, type VirtualListMetrics } from "../../core/virtual/Virtual
 import { AudioTrack } from "../../core/audio/AudioPipeline";
 import { AdaptiveImage } from "../../core/media/AdaptiveImage";
 import { useDebounce } from "../../hooks/useDebounce";
-
-function formatDuration(seconds: number): string {
-  const m = Math.floor(seconds / 60);
-  const s = Math.floor(seconds % 60);
-  return `${m}:${s < 10 ? "0" : ""}${s}`;
-}
+import { formatDuration } from "../../utils/formatters";
 
 export function VirtualizedTrackTable() {
   const {
@@ -168,6 +163,7 @@ export function VirtualizedTrackTable() {
 
           {!is10kBenchmarkActive && (
             <button
+              data-testid="benchmark-10k-btn"
               onClick={() => {
                 setLocalSearch("");
                 generate10kTracksBenchmark();
@@ -204,7 +200,10 @@ export function VirtualizedTrackTable() {
       )}
 
       {/* Live FAANG Performance & DOM Profiler HUD */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 rounded-2xl border border-cyan-500/20 bg-gradient-to-r from-cyan-950/40 via-slate-900/60 to-indigo-950/40 p-4 font-mono text-xs backdrop-blur-md shadow-lg shadow-cyan-950/20">
+      <div
+        data-testid="faang-profiler-hud"
+        className="grid grid-cols-2 gap-3 sm:grid-cols-4 rounded-2xl border border-cyan-500/20 bg-gradient-to-r from-cyan-950/40 via-slate-900/60 to-indigo-950/40 p-4 font-mono text-xs backdrop-blur-md shadow-lg shadow-cyan-950/20"
+      >
         <div className="flex flex-col">
           <span className="text-[10px] uppercase tracking-wider text-slate-400">DOM Recycling</span>
           <span className="mt-1 text-base font-bold text-cyan-300">
@@ -257,6 +256,7 @@ export function VirtualizedTrackTable() {
       {/* Search Input Bar with Debounce Indicator */}
       <div className="relative">
         <input
+          data-testid="track-search-input"
           type="text"
           value={localSearch}
           onChange={(e) => setLocalSearch(e.target.value)}
@@ -329,6 +329,8 @@ export function VirtualizedTrackTable() {
                 {/* Index / Play Button */}
                 <div className="flex items-center text-xs font-mono text-slate-400">
                   <button
+                    data-testid="play-track-row"
+                    aria-label={`Play ${track.title}`}
                     onClick={() => handlePlayRow(track, index)}
                     className="flex h-7 w-7 items-center justify-center rounded-lg bg-white/5 group-hover:bg-cyan-500 group-hover:text-slate-950 transition-all text-slate-300"
                   >

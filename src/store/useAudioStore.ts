@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
+import { useShallow } from "zustand/react/shallow";
 import { AudioPipeline, AudioTrack } from "../core/audio/AudioPipeline";
 
 export type RepeatMode = "OFF" | "ALL" | "ONE";
@@ -34,7 +35,10 @@ export interface AudioStoreState {
 // Initial default pipeline singleton
 let globalPipeline: AudioPipeline | null = null;
 
-function getOrCreatePipeline(set: any, get: any): AudioPipeline {
+function getOrCreatePipeline(
+  set: (fn: Partial<AudioStoreState> | ((state: AudioStoreState) => Partial<AudioStoreState>)) => void,
+  get: () => AudioStoreState
+): AudioPipeline {
   if (globalPipeline) return globalPipeline;
 
   globalPipeline = new AudioPipeline({
@@ -232,13 +236,22 @@ export const useAudioStore = create<AudioStoreState>()(
 export const useCurrentTrack = () => useAudioStore((s) => s.currentTrack);
 export const usePlaybackStatus = () => useAudioStore((s) => s.status);
 export const useAudioVolume = () =>
-  useAudioStore((s) => ({ volume: s.volume, isMuted: s.isMuted, setVolume: s.setVolume, toggleMute: s.toggleMute }));
+  useAudioStore(
+    useShallow((s) => ({
+      volume: s.volume,
+      isMuted: s.isMuted,
+      setVolume: s.setVolume,
+      toggleMute: s.toggleMute,
+    }))
+  );
 export const useAudioQueue = () =>
-  useAudioStore((s) => ({ queue: s.queue, queueIndex: s.queueIndex }));
+  useAudioStore(useShallow((s) => ({ queue: s.queue, queueIndex: s.queueIndex })));
 export const usePlaybackModes = () =>
-  useAudioStore((s) => ({
-    repeatMode: s.repeatMode,
-    isShuffled: s.isShuffled,
-    toggleShuffle: s.toggleShuffle,
-    cycleRepeatMode: s.cycleRepeatMode,
-  }));
+  useAudioStore(
+    useShallow((s) => ({
+      repeatMode: s.repeatMode,
+      isShuffled: s.isShuffled,
+      toggleShuffle: s.toggleShuffle,
+      cycleRepeatMode: s.cycleRepeatMode,
+    }))
+  );

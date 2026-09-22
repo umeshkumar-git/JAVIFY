@@ -3,7 +3,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 /**
  * Pure debounce helper function for standard JavaScript closures.
  */
-export function debounce<Args extends any[]>(
+export function debounce<Args extends unknown[]>(
   fn: (...args: Args) => void,
   waitMs: number
 ): { (...args: Args): void; cancel: () => void; flush: () => void } {
@@ -71,7 +71,7 @@ export function useDebounce<T>(value: T, delayMs = 250): T {
 /**
  * Custom React Hook: Returns a debounced callback with lifecycle controls (cancel, flush, isPending).
  */
-export function useDebouncedCallback<Args extends any[]>(
+export function useDebouncedCallback<Args extends unknown[]>(
   callback: (...args: Args) => void,
   delayMs = 250
 ) {
