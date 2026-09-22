@@ -42,7 +42,7 @@ export class ClockSync {
   private samples: SyncSample[] = [];
   private isCalibrated = false;
   private lastSyncedAt = 0;
-  private syncTimer: any = null;
+  private syncTimer: ReturnType<typeof setInterval> | null = null;
 
   constructor(
     private readonly pingSender: PingSender,

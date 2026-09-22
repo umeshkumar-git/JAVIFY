@@ -10,13 +10,7 @@ import {
 import { useSessionStore } from "../../store/useSessionStore";
 import { useLibraryStore } from "../../store/useLibraryStore";
 import { AudioVisualizerRenderer } from "../../core/audio/AudioVisualizer";
-
-function formatTime(seconds: number): string {
-  if (isNaN(seconds) || seconds < 0) return "0:00";
-  const mins = Math.floor(seconds / 60);
-  const secs = Math.floor(seconds % 60);
-  return `${mins}:${secs < 10 ? "0" : ""}${secs}`;
-}
+import { formatDuration } from "../../utils/formatters";
 
 export function AudioPlayerBar() {
   const currentTrack = useCurrentTrack();
@@ -39,8 +33,9 @@ export function AudioPlayerBar() {
     setModalOpen,
     broadcastAction,
   } = useSessionStore();
-  const isCached = currentTrack ? useLibraryStore((s) => s.cachedTrackIds.has(currentTrack.id)) : false;
+  const cachedTrackIds = useLibraryStore((s) => s.cachedTrackIds);
   const isOnline = useLibraryStore((s) => s.isOnline);
+  const isCached = currentTrack ? cachedTrackIds.has(currentTrack.id) : false;
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const visualizerRef = useRef<AudioVisualizerRenderer | null>(null);
@@ -79,7 +74,10 @@ export function AudioPlayerBar() {
   const progressPercent = duration > 0 ? (currentTime / duration) * 100 : 0;
 
   return (
-    <footer className="fixed bottom-0 left-0 right-0 z-50 border-t border-cyan-500/20 bg-slate-950/85 backdrop-blur-xl px-4 py-3 md:px-8 shadow-[0_-10px_30px_rgba(0,0,0,0.5)]">
+    <footer
+      data-testid="audio-player-bar"
+      className="fixed bottom-0 left-0 right-0 z-50 border-t border-cyan-500/20 bg-slate-950/85 backdrop-blur-xl px-4 py-3 md:px-8 shadow-[0_-10px_30px_rgba(0,0,0,0.5)]"
+    >
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4">
         {/* Track Metadata */}
         <div className="flex items-center gap-3.5 min-w-[200px] max-w-[280px]">
@@ -94,11 +92,12 @@ export function AudioPlayerBar() {
 
           <div className="truncate">
             <div className="flex items-center gap-1.5 truncate">
-              <span className="truncate text-sm font-semibold text-white">
+              <span data-testid="player-track-title" className="truncate text-sm font-semibold text-white">
                 {currentTrack?.title || "No track loaded"}
               </span>
               {isCached && (
                 <span
+                  data-testid="player-offline-badge"
                   className="shrink-0 rounded bg-emerald-500/20 px-1.5 py-0.5 text-[9px] font-mono font-bold text-emerald-300 border border-emerald-500/30"
                   title="Cached offline in IndexedDB & Service Worker"
                 >
@@ -149,6 +148,7 @@ export function AudioPlayerBar() {
             </button>
 
             <button
+              data-testid="player-play-pause-btn"
               onClick={handlePlayPause}
               className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-r from-cyan-500 to-blue-600 text-slate-950 font-bold shadow-lg shadow-cyan-500/25 hover:scale-105 active:scale-95 transition-all"
               title={status === "PLAYING" ? "Pause" : "Play"}
@@ -196,7 +196,7 @@ export function AudioPlayerBar() {
           </div>
 
           <div className="flex w-full items-center gap-3 text-xs font-mono text-slate-400">
-            <span className="w-10 text-right">{formatTime(currentTime)}</span>
+            <span className="w-10 text-right">{formatDuration(currentTime)}</span>
             <div className="relative flex-1 flex items-center">
               <input
                 type="range"
@@ -210,7 +210,7 @@ export function AudioPlayerBar() {
                 }}
               />
             </div>
-            <span className="w-10">{formatTime(duration)}</span>
+            <span className="w-10">{formatDuration(duration)}</span>
           </div>
         </div>
 

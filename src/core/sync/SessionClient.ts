@@ -1,6 +1,14 @@
 import { io, Socket } from "socket.io-client";
 import { ClockSync, ClockSyncMetrics } from "./ClockSync";
 import { DriftCompensator, DriftDiagnosis, AudioControlTarget } from "./DriftCompensator";
+import { AudioTrack } from "../audio/AudioPipeline";
+
+export interface SocketServerResponse<T = unknown> {
+  success: boolean;
+  session?: SessionData;
+  error?: string;
+  data?: T;
+}
 
 export interface Participant {
   socketId: string;
@@ -80,10 +88,14 @@ export class SessionClient {
           if (!this.socket || !this.socket.connected) {
             return reject(new Error("Socket disconnected"));
           }
-          this.socket.timeout(3000).emit("sync:ping", { clientSendTime }, (err: unknown, response: any) => {
-            if (err) reject(err);
-            else resolve(response);
-          });
+          this.socket.timeout(3000).emit(
+            "sync:ping",
+            { clientSendTime },
+            (err: unknown, response: { clientSendTime: number; serverReceiveTime: number; serverTransmitTime: number }) => {
+              if (err) reject(err);
+              else resolve(response);
+            }
+          );
         }),
       8,
       45000
@@ -184,13 +196,13 @@ export class SessionClient {
     });
   }
 
-  public async createSession(userId: string, username: string, initialTrack?: any): Promise<SessionData> {
+  public async createSession(userId: string, username: string, initialTrack?: AudioTrack | null): Promise<SessionData> {
     this.connect();
     return new Promise((resolve, reject) => {
       if (!this.socket) return reject(new Error("Socket not initialized"));
 
-      this.socket.emit("session:create", { userId, username, initialTrack }, (res: any) => {
-        if (!res || !res.success) {
+      this.socket.emit("session:create", { userId, username, initialTrack }, (res: SocketServerResponse) => {
+        if (!res || !res.success || !res.session) {
           return reject(new Error(res?.error || "Failed to create session"));
         }
 
@@ -207,8 +219,8 @@ export class SessionClient {
     return new Promise((resolve, reject) => {
       if (!this.socket) return reject(new Error("Socket not initialized"));
 
-      this.socket.emit("session:join", { sessionId, userId, username }, (res: any) => {
-        if (!res || !res.success) {
+      this.socket.emit("session:join", { sessionId, userId, username }, (res: SocketServerResponse) => {
+        if (!res || !res.success || !res.session) {
           return reject(new Error(res?.error || "Failed to join session"));
         }
 
@@ -229,7 +241,7 @@ export class SessionClient {
   public broadcastAction(
     action: "PLAY" | "PAUSE" | "SEEK" | "TRACK_CHANGE",
     positionMs: number,
-    track?: any
+    track?: AudioTrack | null
   ): void {
     if (!this.socket || !this.currentSession || !this.isHost) return;
 
