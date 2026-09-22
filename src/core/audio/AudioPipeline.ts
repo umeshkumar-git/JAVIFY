@@ -16,6 +16,7 @@ export interface AudioPipelineEvents {
   onTimeUpdate: (currentTime: number, duration: number) => void;
   onTrackEnded: () => void;
   onError: (error: Error) => void;
+  onBuffering?: (isBuffering: boolean) => void;
 }
 
 /**
@@ -131,6 +132,14 @@ export class AudioPipeline implements AudioControlTarget {
       this.events.onTrackEnded?.();
     });
 
+    this.audioElement.addEventListener("waiting", () => {
+      this.events.onBuffering?.(true);
+    });
+
+    this.audioElement.addEventListener("playing", () => {
+      this.events.onBuffering?.(false);
+    });
+
     this.audioElement.addEventListener("error", () => {
       this.events.onError?.(new Error(`Audio pipeline playback error: ${this.audioElement?.error?.message || "Unknown error"}`));
     });
@@ -145,6 +154,11 @@ export class AudioPipeline implements AudioControlTarget {
 
     this.currentTrack = track;
     if (this.audioElement) {
+      // Memory cleanup: pause and release previous media decoder/buffers
+      this.audioElement.pause();
+      this.audioElement.removeAttribute("src");
+      this.audioElement.load();
+
       this.audioElement.src = track.url;
       this.audioElement.load();
     }
@@ -172,7 +186,20 @@ export class AudioPipeline implements AudioControlTarget {
       this.gainNode.gain.linearRampToValueAtTime(targetGain, now + 0.035);
     }
 
-    await this.audioElement.play();
+    try {
+      await this.audioElement.play();
+    } catch (err: unknown) {
+      if (err instanceof DOMException && err.name === "AbortError") {
+        // Handled: interrupted by pause() or a new track load()
+        return;
+      }
+      if (err instanceof DOMException && err.name === "NotAllowedError") {
+        this.status = "PAUSED";
+        this.events.onStateChange?.("PAUSED");
+        return;
+      }
+      throw err;
+    }
   }
 
   public pause(): void {
