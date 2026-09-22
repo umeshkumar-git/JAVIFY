@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { useShallow } from "zustand/react/shallow";
 import { AudioPipeline, AudioTrack } from "../core/audio/AudioPipeline";
+import { QueueManager } from "../core/queue/QueueManager";
 
 export type RepeatMode = "OFF" | "ALL" | "ONE";
 
@@ -59,18 +60,6 @@ function getOrCreatePipeline(
   });
 
   return globalPipeline;
-}
-
-/**
- * Modern Fisher-Yates shuffle algorithm.
- */
-function shuffleArray<T>(array: T[]): T[] {
-  const arr = [...array];
-  for (let i = arr.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [arr[i], arr[j]] = [arr[j], arr[i]];
-  }
-  return arr;
 }
 
 export const useAudioStore = create<AudioStoreState>()(
@@ -165,7 +154,7 @@ export const useAudioStore = create<AudioStoreState>()(
           if (isShuffled) {
             const selectedTrack = tracks[startIndex];
             const remaining = tracks.filter((_, idx) => idx !== startIndex);
-            const shuffled = [selectedTrack, ...shuffleArray(remaining)].filter(Boolean);
+            const shuffled = [selectedTrack, ...QueueManager.fisherYatesShuffle(remaining)].filter(Boolean);
             set({
               originalQueue: tracks,
               queue: shuffled,
@@ -184,16 +173,14 @@ export const useAudioStore = create<AudioStoreState>()(
 
         toggleShuffle: () => {
           const { isShuffled, queue, originalQueue, currentTrack } = get();
-          const nextShuffled = !isShuffled;
+          const qm = new QueueManager(originalQueue);
 
-          if (nextShuffled) {
-            const current = currentTrack;
-            const remaining = originalQueue.filter((t) => t.id !== current?.id);
-            const shuffled = current ? [current, ...shuffleArray(remaining)] : shuffleArray(originalQueue);
+          if (!isShuffled) {
+            const result = qm.toggleShuffle(currentTrack?.id);
             set({
               isShuffled: true,
-              queue: shuffled,
-              queueIndex: current ? 0 : 0,
+              queue: result.queue,
+              queueIndex: result.newIndex,
             });
           } else {
             const restoredIndex = currentTrack

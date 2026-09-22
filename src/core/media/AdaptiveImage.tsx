@@ -1,10 +1,12 @@
 import { useState, useEffect, useRef, type ImgHTMLAttributes } from "react";
+import { LRUCache } from "../cache/LRUCache";
 
 /**
- * Global in-memory cache of successfully decoded image URLs.
- * Prevents skeleton re-flashing when recycled DOM nodes revisit previously loaded album covers.
+ * Bounded LRU Cache (capacity: 50) of successfully decoded image URLs.
+ * Replaces unbounded Set to avoid memory leaks while preventing skeleton re-flashing
+ * when recycled DOM nodes revisit previously loaded album covers.
  */
-export const globalDecodedCache = new Set<string>();
+export const globalDecodedCache = new LRUCache<string, boolean>(50);
 
 /**
  * Transforms standard image URLs into modern next-gen WebP format URLs with quality optimization.
