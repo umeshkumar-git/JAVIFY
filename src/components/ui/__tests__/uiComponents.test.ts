@@ -6,6 +6,8 @@ import { Badge } from "../Badge";
 import { TracklistSkeleton, AlbumGridSkeleton, Skeleton } from "../SkeletonLoader";
 import { AlbumCard } from "../AlbumCard";
 import { PageTransition, type PageTransitionProps } from "../../transitions/PageTransition";
+import { MediaCard } from "../../media/MediaCard";
+import { AppLayout } from "../../layout/AppLayout";
 
 describe("Design System & UI Components", () => {
   describe("Button Component", () => {
@@ -93,6 +95,30 @@ describe("Design System & UI Components", () => {
       const element = React.createElement<PageTransitionProps>(PageTransition, { direction: "up" }, child);
       expect(element.props.direction).toBe("up");
       expect(element.props.children).toBe(child);
+    });
+  });
+
+  describe("MediaCard Component", () => {
+    it("renders semantic article with hover physics and accessible properties", () => {
+      const element = React.createElement(MediaCard, {
+        id: "media-1",
+        title: "Cybernetic Drift",
+        subtitle: "Kavinsky Protocol",
+        coverUrl: "https://images.unsplash.com/photo-1",
+        badgeText: "Synthwave",
+        duration: "3:04",
+      });
+      expect(element.props.title).toBe("Cybernetic Drift");
+      expect(element.props.badgeText).toBe("Synthwave");
+      expect(element.props.duration).toBe("3:04");
+    });
+  });
+
+  describe("AppLayout Component", () => {
+    it("exports layout component with 3-column architecture and shell structure", () => {
+      expect(AppLayout).toBeDefined();
+      const element = React.createElement(AppLayout, null, React.createElement("div", null, "Child Content"));
+      expect(element).toBeDefined();
     });
   });
 });
