@@ -1,12 +1,15 @@
 import { create } from "zustand";
 import { AudioTrack } from "../core/audio/AudioPipeline";
 import { offlineAudioCache } from "../core/audio/OfflineAudioCache";
+import { BffClient } from "../services/bffClient";
 
 interface LibraryStoreState {
   tracks: AudioTrack[];
   filteredTracks: AudioTrack[];
   searchQuery: string;
   is10kBenchmarkActive: boolean;
+  isBffChartsActive: boolean;
+  bffChartMetadata: { chartName: string; updatedAt: string } | null;
   cachedTrackIds: Set<string>;
   storageUsage: { usageMB: number; quotaMB: number };
   isLoading: boolean;
@@ -15,6 +18,7 @@ interface LibraryStoreState {
   initializeLibrary: () => Promise<void>;
   generate10kTracksBenchmark: () => void;
   loadStandardCatalog: () => void;
+  loadBffCharts: () => Promise<void>;
   setSearchQuery: (query: string) => void;
   toggleCacheTrack: (track: AudioTrack) => Promise<void>;
   refreshCacheStatus: () => Promise<void>;
@@ -78,6 +82,8 @@ export const useLibraryStore = create<LibraryStoreState>((set, get) => ({
   filteredTracks: DEFAULT_TRACKS,
   searchQuery: "",
   is10kBenchmarkActive: false,
+  isBffChartsActive: false,
+  bffChartMetadata: null,
   cachedTrackIds: new Set<string>(),
   storageUsage: { usageMB: 0, quotaMB: 0 },
   isLoading: false,
@@ -91,8 +97,29 @@ export const useLibraryStore = create<LibraryStoreState>((set, get) => ({
       tracks: DEFAULT_TRACKS,
       filteredTracks: DEFAULT_TRACKS,
       is10kBenchmarkActive: false,
+      isBffChartsActive: false,
+      bffChartMetadata: null,
       searchQuery: "",
     });
+  },
+
+  loadBffCharts: async () => {
+    set({ isLoading: true });
+    try {
+      const response = await BffClient.getTopCharts("GLOBAL", 20);
+      set({
+        tracks: response.tracks,
+        filteredTracks: response.tracks,
+        isBffChartsActive: true,
+        is10kBenchmarkActive: false,
+        bffChartMetadata: { chartName: response.chartName, updatedAt: response.updatedAt },
+        searchQuery: "",
+        isLoading: false,
+      });
+    } catch (err) {
+      console.error("Failed to load BFF top charts:", err);
+      set({ isLoading: false });
+    }
   },
 
   generate10kTracksBenchmark: () => {
@@ -138,6 +165,8 @@ export const useLibraryStore = create<LibraryStoreState>((set, get) => ({
       tracks: benchmarkTracks,
       filteredTracks: benchmarkTracks,
       is10kBenchmarkActive: true,
+      isBffChartsActive: false,
+      bffChartMetadata: null,
       searchQuery: "",
     });
   },

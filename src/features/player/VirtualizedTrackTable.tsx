@@ -16,11 +16,15 @@ export function VirtualizedTrackTable() {
     filteredTracks,
     searchQuery,
     is10kBenchmarkActive,
+    isBffChartsActive,
+    bffChartMetadata,
     cachedTrackIds,
     storageUsage,
+    isLoading,
     setSearchQuery,
     generate10kTracksBenchmark,
     loadStandardCatalog,
+    loadBffCharts,
     toggleCacheTrack,
     initializeLibrary,
   } = useLibraryStore();
@@ -47,6 +51,11 @@ export function VirtualizedTrackTable() {
             <span className="rounded-full bg-cyan-500/10 px-2 py-0.5 text-[11px] font-mono font-bold text-cyan-300 border border-cyan-500/20">
               {filteredTracks.length.toLocaleString()} Tracks Active
             </span>
+            {isBffChartsActive && (
+              <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-[11px] font-mono font-bold text-amber-300 border border-amber-500/30 animate-pulse">
+                BFF SWR Cached
+              </span>
+            )}
           </div>
           <h2 className="mt-1 text-2xl font-bold text-white tracking-tight">
             Distributed Track Library
@@ -56,21 +65,35 @@ export function VirtualizedTrackTable() {
           </p>
         </div>
 
-        {/* 10k Benchmark Toggle */}
+        {/* Catalog Switches & Benchmark Controls */}
         <div className="flex flex-wrap items-center gap-2.5">
-          {is10kBenchmarkActive ? (
+          {is10kBenchmarkActive || isBffChartsActive ? (
             <button
               onClick={loadStandardCatalog}
               className="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold text-slate-300 hover:bg-white/10 transition-all"
             >
               Reset to Standard Catalog
             </button>
-          ) : (
+          ) : null}
+
+          <button
+            onClick={loadBffCharts}
+            disabled={isLoading || isBffChartsActive}
+            className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-semibold transition-all ${
+              isBffChartsActive
+                ? "bg-amber-500/20 text-amber-300 border border-amber-500/40 cursor-default"
+                : "bg-gradient-to-r from-amber-500 to-orange-600 text-slate-950 hover:opacity-95 shadow-lg shadow-amber-500/20 active:scale-95"
+            }`}
+          >
+            <span>{isLoading ? "⚡ Fetching BFF..." : "🔥 Top Charts (BFF & SWR)"}</span>
+          </button>
+
+          {!is10kBenchmarkActive && (
             <button
               onClick={generate10kTracksBenchmark}
               className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-cyan-500 to-indigo-600 px-4 py-2 text-xs font-semibold text-slate-950 hover:opacity-95 shadow-lg shadow-cyan-500/20 active:scale-95 transition-all"
             >
-              <span>⚡ Load 10,000 Tracks Benchmark</span>
+              <span>⚡ 10k Benchmark</span>
             </button>
           )}
 
@@ -82,6 +105,20 @@ export function VirtualizedTrackTable() {
           </div>
         </div>
       </div>
+
+      {/* SWR Cache Status Callout */}
+      {isBffChartsActive && bffChartMetadata && (
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 rounded-2xl border border-amber-500/30 bg-amber-500/10 px-5 py-3 text-xs text-amber-200 backdrop-blur-md">
+          <div className="flex items-center gap-2">
+            <span className="h-2 w-2 rounded-full bg-amber-400 animate-pulse" />
+            <span className="font-semibold font-mono">BFF Cache Status:</span>
+            <span>{bffChartMetadata.chartName} (Served via Backend-for-Frontend)</span>
+          </div>
+          <div className="font-mono text-[11px] text-amber-300/80">
+            Synced: {new Date(bffChartMetadata.updatedAt).toLocaleTimeString()} • Protected with Redis SETNX Single-Flight Mutex
+          </div>
+        </div>
+      )}
 
       {/* Search Input Bar */}
       <div className="relative">

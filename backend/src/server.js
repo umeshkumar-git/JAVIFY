@@ -20,6 +20,7 @@ import recommendationRoutes from "./routes/recommendation.routes.js";
 import battleRoutes from "./routes/battle.routes.js";
 import githubRoutes from "./routes/github.routes.js";
 import gatewayRoutes from "./routes/gateway.routes.js";
+import bffRoutes from "./routes/bff.routes.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 import { registerBattleSocket } from "./services/battleSocket.service.js";
 import { registerSessionSyncSocket } from "./services/sessionSync.service.js";
@@ -97,6 +98,7 @@ app.use("/api/leaderboard", leaderboardRoutes);
 app.use("/api/recommendations", recommendationRoutes);
 app.use("/api/battles", battleRoutes);
 app.use("/api/gateway", gatewayRoutes);
+app.use("/api/bff", bffRoutes);
 
 // GitHub OAuth uses the /auth namespace per spec (popup redirect)
 app.use("/auth/github", githubRoutes);
