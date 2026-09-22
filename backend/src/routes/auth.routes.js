@@ -1,3 +1,29 @@
+/**
+ * @openapi
+ * /api/auth/signup:
+ *   post:
+ *     tags: [Auth]
+ *     summary: Register a new user
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [name, email, password]
+ *             properties:
+ *               name:
+ *                 type: string
+ *               email:
+ *                 type: string
+ *                 format: email
+ *               password:
+ *                 type: string
+ *                 format: password
+ *     responses:
+ *       201:
+ *         description: The user account and JWT session were created.
+ */
 import { Router } from "express";
 import rateLimit from "express-rate-limit";
 import { z } from "zod";

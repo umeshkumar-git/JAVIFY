@@ -7,6 +7,7 @@ import morgan from "morgan";
 import rateLimit from "express-rate-limit";
 import http from "http";
 import { Server as SocketServer } from "socket.io";
+import swaggerUi from "swagger-ui-express";
 
 import authRoutes from "./routes/auth.routes.js";
 import userRoutes from "./routes/user.routes.js";
@@ -18,12 +19,16 @@ import leaderboardRoutes from "./routes/leaderboard.routes.js";
 import recommendationRoutes from "./routes/recommendation.routes.js";
 import battleRoutes from "./routes/battle.routes.js";
 import githubRoutes from "./routes/github.routes.js";
+import gatewayRoutes from "./routes/gateway.routes.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 import { registerBattleSocket } from "./services/battleSocket.service.js";
+import { registerSessionSyncSocket } from "./services/sessionSync.service.js";
+import { createRedisRateLimiter } from "./middleware/redisRateLimiter.js";
 import logger from "./utils/logger.js";
 import { successResponse, errorResponse } from "./utils/apiResponse.js";
 import { connectRedis } from "./utils/cache.js";
 import { startWorkers } from "./queue/workers.js";
+import { swaggerSpec } from "./docs/swagger.js";
 
 const app = express();
 const server = http.createServer(app);
@@ -46,17 +51,41 @@ app.use(express.json({ limit: "1mb" }));
 app.use(cookieParser());
 app.use(morgan("combined"));
 
-const generalLimiter = rateLimit({
+const generalLimiter = createRedisRateLimiter({
 	windowMs: 60 * 1000,
 	max: 120,
-	standardHeaders: true,
-	legacyHeaders: false,
+	keyPrefix: "rl:api",
 });
 app.use("/api/", generalLimiter);
 
-app.get("/api/health", (_req, res) =>
-	res.json(successResponse({ status: "ok", timestamp: Date.now() })),
+app.get("/health", (_req, res) =>
+	res.json(
+		successResponse({
+			status: "ok",
+			service: "javify-api",
+			timestamp: Date.now(),
+		}),
+	),
 );
+
+app.get("/api/health", (_req, res) =>
+	res.json(
+		successResponse({
+			status: "ok",
+			service: "javify-api",
+			timestamp: Date.now(),
+		}),
+	),
+);
+
+app.use("/api/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
+	explorer: true,
+	customSiteTitle: "Javify API Docs",
+}));
+
+app.get("/api/docs.json", (_req, res) => {
+	res.json(swaggerSpec);
+});
 
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
@@ -67,6 +96,7 @@ app.use("/api/ai", aiRoutes);
 app.use("/api/leaderboard", leaderboardRoutes);
 app.use("/api/recommendations", recommendationRoutes);
 app.use("/api/battles", battleRoutes);
+app.use("/api/gateway", gatewayRoutes);
 
 // GitHub OAuth uses the /auth namespace per spec (popup redirect)
 app.use("/auth/github", githubRoutes);
@@ -83,6 +113,7 @@ app.use((req, res) => {
 app.use(errorHandler);
 
 registerBattleSocket(io);
+registerSessionSyncSocket(io);
 
 async function startServer() {
 	await connectRedis();

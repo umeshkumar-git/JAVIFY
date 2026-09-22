@@ -6,7 +6,10 @@ const redisUrl = process.env.REDIS_URL ?? "redis://localhost:6379";
 export const redisClient = createClient({
 	url: redisUrl,
 	socket: {
-		reconnectStrategy: (retries) => Math.min(retries * 100, 2000),
+		reconnectStrategy: (retries) => {
+			if (retries > 2) return new Error("Redis unavailable");
+			return Math.min(retries * 100, 500);
+		},
 	},
 });
 

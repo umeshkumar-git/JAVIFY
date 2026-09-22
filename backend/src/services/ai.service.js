@@ -1,4 +1,3 @@
-import { env } from "../config/env.js";
 import { prisma } from "../utils/prisma.js";
 
 const STATIC_PATTERNS = [

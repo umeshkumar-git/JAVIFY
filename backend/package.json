@@ -7,6 +7,10 @@
 	"scripts": {
 		"dev": "nodemon src/server.js",
 		"start": "node src/server.js",
+		"lint": "eslint .",
+		"test": "vitest run",
+		"test:watch": "vitest",
+		"test:coverage": "vitest run --coverage",
 		"prisma:generate": "prisma generate",
 		"prisma:migrate": "prisma migrate dev",
 		"seed": "node prisma/seed.js"
@@ -29,12 +33,20 @@
 		"nodemailer": "^6.9.9",
 		"redis": "^5.12.1",
 		"socket.io": "^4.7.4",
+		"swagger-jsdoc": "^6.3.0",
+		"swagger-ui-express": "^5.0.1",
 		"uuid": "^9.0.1",
 		"winston": "^3.13.0",
 		"zod": "^3.22.4"
 	},
 	"devDependencies": {
+		"@eslint/js": "^10.0.1",
+		"@vitest/coverage-v8": "^5.0.1",
+		"eslint": "^10.10.0",
+		"globals": "^17.12.0",
 		"nodemon": "^3.1.0",
-		"prisma": "^5.10.0"
+		"prisma": "^5.10.0",
+		"supertest": "^7.2.2",
+		"vitest": "^5.0.1"
 	}
 }

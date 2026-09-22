@@ -123,7 +123,9 @@ export async function executeJavaInDocker({
     logger.error("Sandbox execution error", { error: error.message });
     try {
       if (container) await container.remove({ force: true });
-    } catch (_) {}
+    } catch (error) {
+      void error;
+    }
     return {
       compileError: null,
       runtimeError: error.message === "TIMEOUT" ? "Execution exceeded time limit." : error.message,

@@ -49,9 +49,13 @@ import { getGitHubState, pushChallengeProgress } from "./features/github/github.
 import MiniGamesArena from "./features/miniGames/MiniGamesArena";
 import CertificationsPage from "./features/certifications/CertificationsPage";
 import CertificateSharePage from "./features/certifications/CertificateSharePage";
+import StreamingHubPage from "./pages/StreamingHubPage";
+import { AudioPlayerBar } from "./features/player/AudioPlayerBar";
+import { ListenTogetherModal } from "./features/player/ListenTogetherModal";
 
 const navigation = [
   { label: "Home", to: "/" },
+  { label: "🎵 Stream & Sync", to: "/stream" },
   { label: "Dashboard", to: "/dashboard" },
   { label: "World Map", to: "/map" },
   { label: "🎮 Arena", to: "/arena" },
@@ -905,12 +909,15 @@ function AppLayout() {
               <Route path="/certifications" element={<CertificationsPage />} />
               <Route path="/certificate/share/:certId" element={<CertificateSharePage />} />
               <Route path="/certificate/verify/:certId" element={<CertificateSharePage />} />
+              <Route path="/stream" element={<StreamingHubPage />} />
               <Route path="*" element={<DashboardPage />} />
             </Routes>
           </motion.div>
         </main>
       </div>
       <AiAssistantDock />
+      <AudioPlayerBar />
+      <ListenTogetherModal />
     </div>
   );
 }
