@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { AudioTrack } from "../core/audio/AudioPipeline";
 import { offlineAudioCache } from "../core/audio/OfflineAudioCache";
 import { BffClient } from "../services/bffClient";
+import { networkMonitor } from "../core/offline/NetworkMonitor";
 
 interface LibraryStoreState {
   tracks: AudioTrack[];
@@ -14,14 +15,25 @@ interface LibraryStoreState {
   storageUsage: { usageMB: number; quotaMB: number };
   isLoading: boolean;
 
+  // Offline-First Capabilities
+  isOnline: boolean;
+  isSimulatedOffline: boolean;
+  filterOfflineOnly: boolean;
+  isDownloadingAll: boolean;
+  downloadProgress: { current: number; total: number; percent: number } | null;
+
   // Actions
   initializeLibrary: () => Promise<void>;
   generate10kTracksBenchmark: () => void;
   loadStandardCatalog: () => void;
   loadBffCharts: () => Promise<void>;
   setSearchQuery: (query: string) => void;
+  applyFilters: () => void;
   toggleCacheTrack: (track: AudioTrack) => Promise<void>;
   refreshCacheStatus: () => Promise<void>;
+  toggleOfflineSimulation: () => void;
+  toggleFilterOfflineOnly: () => void;
+  downloadAllOffline: () => Promise<void>;
 }
 
 const DEFAULT_TRACKS: AudioTrack[] = [
@@ -88,7 +100,17 @@ export const useLibraryStore = create<LibraryStoreState>((set, get) => ({
   storageUsage: { usageMB: 0, quotaMB: 0 },
   isLoading: false,
 
+  // Offline state
+  isOnline: true,
+  isSimulatedOffline: false,
+  filterOfflineOnly: false,
+  isDownloadingAll: false,
+  downloadProgress: null,
+
   initializeLibrary: async () => {
+    networkMonitor.subscribe((isOnline) => {
+      set({ isOnline, isSimulatedOffline: networkMonitor.isSimulated() });
+    });
     await get().refreshCacheStatus();
   },
 
@@ -100,6 +122,7 @@ export const useLibraryStore = create<LibraryStoreState>((set, get) => ({
       isBffChartsActive: false,
       bffChartMetadata: null,
       searchQuery: "",
+      filterOfflineOnly: false,
     });
   },
 
@@ -171,24 +194,66 @@ export const useLibraryStore = create<LibraryStoreState>((set, get) => ({
     });
   },
 
-  setSearchQuery: (query: string) => {
-    const trimmed = query.toLowerCase().trim();
-    const { tracks } = get();
+  applyFilters: () => {
+    const { tracks, searchQuery, filterOfflineOnly, cachedTrackIds } = get();
+    const trimmed = searchQuery.toLowerCase().trim();
 
-    if (!trimmed) {
-      set({ searchQuery: query, filteredTracks: tracks });
-      return;
+    let list = tracks;
+    if (filterOfflineOnly) {
+      list = list.filter((t) => cachedTrackIds.has(t.id));
+    }
+    if (trimmed) {
+      list = list.filter(
+        (t) =>
+          t.title.toLowerCase().includes(trimmed) ||
+          t.artist.toLowerCase().includes(trimmed) ||
+          (t.album && t.album.toLowerCase().includes(trimmed)) ||
+          (t.genre && t.genre.toLowerCase().includes(trimmed))
+      );
     }
 
-    const filtered = tracks.filter(
-      (t) =>
-        t.title.toLowerCase().includes(trimmed) ||
-        t.artist.toLowerCase().includes(trimmed) ||
-        (t.album && t.album.toLowerCase().includes(trimmed)) ||
-        (t.genre && t.genre.toLowerCase().includes(trimmed))
-    );
+    set({ filteredTracks: list });
+  },
 
-    set({ searchQuery: query, filteredTracks: filtered });
+  setSearchQuery: (query: string) => {
+    set({ searchQuery: query });
+    get().applyFilters();
+  },
+
+  toggleOfflineSimulation: () => {
+    const isSimulated = networkMonitor.toggleSimulation();
+    set({ isSimulatedOffline: isSimulated, isOnline: networkMonitor.isOnline() });
+  },
+
+  toggleFilterOfflineOnly: () => {
+    set((state) => ({ filterOfflineOnly: !state.filterOfflineOnly }));
+    get().applyFilters();
+  },
+
+  downloadAllOffline: async () => {
+    const { tracks, cachedTrackIds } = get();
+    const uncached = tracks.filter((t) => !cachedTrackIds.has(t.id)).slice(0, 15);
+    if (uncached.length === 0) return;
+
+    set({
+      isDownloadingAll: true,
+      downloadProgress: { current: 0, total: uncached.length, percent: 0 },
+    });
+
+    for (let i = 0; i < uncached.length; i++) {
+      try {
+        await offlineAudioCache.cacheTrack(uncached[i]);
+      } catch (err) {
+        console.warn("[OfflineDownload] Track cache error:", err);
+      }
+      const current = i + 1;
+      const percent = Math.round((current / uncached.length) * 100);
+      set({ downloadProgress: { current, total: uncached.length, percent } });
+      await get().refreshCacheStatus();
+    }
+
+    set({ isDownloadingAll: false, downloadProgress: null });
+    get().applyFilters();
   },
 
   toggleCacheTrack: async (track: AudioTrack) => {
@@ -199,6 +264,7 @@ export const useLibraryStore = create<LibraryStoreState>((set, get) => ({
       await offlineAudioCache.cacheTrack(track);
     }
     await get().refreshCacheStatus();
+    get().applyFilters();
   },
 
   refreshCacheStatus: async () => {
