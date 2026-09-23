@@ -58,7 +58,6 @@ import { AppLayout as EnterpriseStudioLayout } from "./components/layout/AppLayo
 const navigation = [
   { label: "Home", to: "/" },
   { label: "🎵 Stream & Sync", to: "/stream" },
-  { label: "🎛️ 3-Col Studio", to: "/studio" },
   { label: "Dashboard", to: "/dashboard" },
   { label: "World Map", to: "/map" },
   { label: "🎮 Arena", to: "/arena" },

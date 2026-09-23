@@ -67,8 +67,8 @@ export class AudioPipeline implements AudioControlTarget {
 
     this.audioContext = new AudioContextClass();
     this.audioElement = new Audio();
-    this.audioElement.crossOrigin = "anonymous";
     this.audioElement.preload = "auto";
+    this.setupUserGestureUnlock();
 
     // Create DSP Nodes
     this.sourceNode = this.audioContext.createMediaElementSource(this.audioElement);
@@ -110,6 +110,39 @@ export class AudioPipeline implements AudioControlTarget {
     this.isInitialized = true;
   }
 
+  private setupUserGestureUnlock(): void {
+    if (typeof window === "undefined") return;
+    const unlock = () => {
+      if (this.audioContext && this.audioContext.state === "suspended") {
+        this.audioContext.resume().catch(() => {});
+      }
+      window.removeEventListener("click", unlock);
+      window.removeEventListener("keydown", unlock);
+      window.removeEventListener("touchstart", unlock);
+      window.removeEventListener("pointerdown", unlock);
+    };
+    window.addEventListener("click", unlock, { passive: true, once: true });
+    window.addEventListener("keydown", unlock, { passive: true, once: true });
+    window.addEventListener("touchstart", unlock, { passive: true, once: true });
+    window.addEventListener("pointerdown", unlock, { passive: true, once: true });
+  }
+
+  private configureCrossOrigin(url: string): void {
+    if (!this.audioElement) return;
+    try {
+      if (typeof window !== "undefined" && (url.startsWith("http://") || url.startsWith("https://"))) {
+        const parsed = new URL(url, window.location.href);
+        if (parsed.origin !== window.location.origin) {
+          this.audioElement.crossOrigin = "anonymous";
+          return;
+        }
+      }
+    } catch {
+      // Fallback
+    }
+    this.audioElement.removeAttribute("crossorigin");
+  }
+
   private bindAudioEvents(): void {
     if (!this.audioElement) return;
 
@@ -141,7 +174,14 @@ export class AudioPipeline implements AudioControlTarget {
     });
 
     this.audioElement.addEventListener("error", () => {
-      this.events.onError?.(new Error(`Audio pipeline playback error: ${this.audioElement?.error?.message || "Unknown error"}`));
+      if (!this.audioElement || !this.audioElement.src || this.audioElement.src === "" || (typeof window !== "undefined" && this.audioElement.src === window.location.href)) {
+        return;
+      }
+      const mediaErr = this.audioElement.error;
+      // Code 1 is MEDIA_ERR_ABORTED - do not report as fatal playback error
+      if (mediaErr && mediaErr.code === 1) return;
+      console.warn("[AudioPipeline] Media element error:", mediaErr?.code, mediaErr?.message);
+      this.events.onError?.(new Error(`Audio pipeline playback error: ${mediaErr?.message || "Format or Network error"}`));
     });
   }
 
@@ -149,18 +189,24 @@ export class AudioPipeline implements AudioControlTarget {
     await this.init();
 
     if (this.audioContext?.state === "suspended") {
-      await this.audioContext.resume();
+      try {
+        await this.audioContext.resume();
+      } catch (err) {
+        console.warn("[AudioPipeline] AudioContext resume failed:", err);
+      }
     }
 
     this.currentTrack = track;
     if (this.audioElement) {
-      // Memory cleanup: pause and release previous media decoder/buffers
+      this.configureCrossOrigin(track.url);
       this.audioElement.pause();
-      this.audioElement.removeAttribute("src");
-      this.audioElement.load();
-
-      this.audioElement.src = track.url;
-      this.audioElement.load();
+      
+      const currentSrc = this.audioElement.src;
+      const targetSrc = typeof window !== "undefined" ? new URL(track.url, window.location.href).href : track.url;
+      if (currentSrc !== targetSrc) {
+        this.audioElement.src = track.url;
+        this.audioElement.load();
+      }
     }
 
     if (autoPlay) {
@@ -172,7 +218,11 @@ export class AudioPipeline implements AudioControlTarget {
     await this.init();
 
     if (this.audioContext?.state === "suspended") {
-      await this.audioContext.resume();
+      try {
+        await this.audioContext.resume();
+      } catch (err) {
+        console.warn("[AudioPipeline] AudioContext resume on play failed:", err);
+      }
     }
 
     if (!this.audioElement) return;
@@ -188,12 +238,16 @@ export class AudioPipeline implements AudioControlTarget {
 
     try {
       await this.audioElement.play();
+      this.status = "PLAYING";
+      this.events.onStateChange?.("PLAYING");
+      this.startTimeTracker();
     } catch (err: unknown) {
       if (err instanceof DOMException && err.name === "AbortError") {
         // Handled: interrupted by pause() or a new track load()
         return;
       }
       if (err instanceof DOMException && err.name === "NotAllowedError") {
+        console.warn("[AudioPipeline] Autoplay prevented, awaiting user interaction.");
         this.status = "PAUSED";
         this.events.onStateChange?.("PAUSED");
         return;

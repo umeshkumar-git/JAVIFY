@@ -52,6 +52,6 @@ describe("Backend-for-Frontend (BFF Service)", () => {
     expect(meta).toBeDefined();
     expect(meta.trackId).toBe("trk-synth-01");
     expect(meta.streamUrl).toBeDefined();
-    expect(meta.streamUrl).toMatch(/^https:\/\//);
+    expect(meta.streamUrl).toMatch(/^https?:\/\/|^\/audio\//);
   });
 });

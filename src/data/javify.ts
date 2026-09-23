@@ -728,7 +728,11 @@ export function evaluateJavaSubmission(code: string, challenge: Challenge): Exec
     };
   }
 
-  if (!normalized.includes("main(string[] args)")) {
+  const hasMainMethod = /main\s*\(\s*String\s*(\[\s*\]\s*\w+|\w+\s*\[\s*\]|\.\.\.\s*\w+)\s*\)/i.test(code) ||
+    normalized.includes("main(string[] args)") ||
+    normalized.includes("main(string args[])");
+
+  if (!hasMainMethod) {
     return {
       success: false,
       passed: false,
@@ -751,21 +755,37 @@ export function evaluateJavaSubmission(code: string, challenge: Challenge): Exec
     };
   }
 
-  const matchedSnippets = challenge.requiredSnippets.filter((snippet) => normalized.includes(snippet.toLowerCase())).length;
-  const completionRatio = matchedSnippets / challenge.requiredSnippets.length;
-  const hasConsoleOutput = /System\.out\.print/i.test(code);
+  // Extract console output from System.out.println / print
+  const printMatches = [...code.matchAll(/System\.out\.print(?:ln)?\s*\(\s*(?:"([^"]*)"|([^)]*))\s*\)/g)];
+  const extractedOutputs = printMatches.map((m) => (m[1] !== undefined ? m[1] : (m[2] || "").trim()));
+  const simulatedOutput = extractedOutputs.join("\n").trim();
 
-  if (completionRatio === 1) {
+  const matchedSnippets = challenge.requiredSnippets.filter((snippet) => {
+    if (snippet === "main(String[] args)") {
+      return hasMainMethod;
+    }
+    return normalized.includes(snippet.toLowerCase());
+  }).length;
+
+  const outputMatchesExpected =
+    simulatedOutput.toLowerCase() === challenge.expectedOutput.trim().toLowerCase() ||
+    normalized.includes(challenge.expectedOutput.trim().toLowerCase());
+
+  const completionRatio = matchedSnippets / challenge.requiredSnippets.length;
+  const passed = (completionRatio >= 0.75 && outputMatchesExpected) || completionRatio === 1;
+
+  if (passed) {
     return {
       success: true,
       passed: true,
       title: challenge.boss ? "Boss defeated" : "Mission complete",
-      output: challenge.expectedOutput,
+      output: simulatedOutput || challenge.expectedOutput,
       mentor: challenge.mentorFeedback,
       diagnostics: challenge.hiddenTests.map((test) => `✓ ${test}`),
     };
   }
 
+  const hasConsoleOutput = /System\.out\.print/i.test(code);
   if (!hasConsoleOutput) {
     return {
       success: true,
@@ -781,7 +801,9 @@ export function evaluateJavaSubmission(code: string, challenge: Challenge): Exec
     success: true,
     passed: false,
     title: "Output mismatch",
-    output: `Execution finished, but the output did not satisfy the hidden tests for ${challenge.title}.`,
+    output: simulatedOutput
+      ? `Output:\n${simulatedOutput}\n\nExpected:\n${challenge.expectedOutput}`
+      : `Execution finished, but the output did not satisfy the hidden tests for ${challenge.title}.`,
     mentor: challenge.hint,
     diagnostics: challenge.hiddenTests.map((test, index) => `${index === 0 ? "✓" : "•"} ${test}`),
   };

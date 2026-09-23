@@ -44,7 +44,7 @@ const DEFAULT_TRACKS: AudioTrack[] = [
     album: "Neon Architecture Vol. 1",
     duration: 184,
     genre: "Synthwave",
-    url: "https://actions.google.com/sounds/v1/science_fiction/alien_spaceship_atmosphere.ogg",
+    url: "/audio/cybernetic-drift.wav",
     coverUrl: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=600&auto=format&fit=crop&q=80",
   },
   {
@@ -54,7 +54,7 @@ const DEFAULT_TRACKS: AudioTrack[] = [
     album: "Deep Orbit Telemetry",
     duration: 215,
     genre: "Ambient Lo-Fi",
-    url: "https://actions.google.com/sounds/v1/science_fiction/scifi_telemetry.ogg",
+    url: "/audio/quantum-telemetry.wav",
     coverUrl: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=600&auto=format&fit=crop&q=80",
   },
   {
@@ -64,7 +64,7 @@ const DEFAULT_TRACKS: AudioTrack[] = [
     album: "Zero Drift",
     duration: 198,
     genre: "Electro Orchestral",
-    url: "https://actions.google.com/sounds/v1/science_fiction/space_engine_large.ogg",
+    url: "/audio/distributed-heartbeat.wav",
     coverUrl: "https://images.unsplash.com/photo-1550684848-fac1c5b4e853?w=600&auto=format&fit=crop&q=80",
   },
   {
@@ -74,7 +74,7 @@ const DEFAULT_TRACKS: AudioTrack[] = [
     album: "Cyber Zen",
     duration: 242,
     genre: "Chillstep",
-    url: "https://actions.google.com/sounds/v1/science_fiction/alien_spaceship_atmosphere.ogg",
+    url: "/audio/binary-monks.wav",
     coverUrl: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=600&auto=format&fit=crop&q=80",
   },
   {
@@ -84,7 +84,7 @@ const DEFAULT_TRACKS: AudioTrack[] = [
     album: "Stack Overflow",
     duration: 176,
     genre: "Glitch Hop",
-    url: "https://actions.google.com/sounds/v1/science_fiction/scifi_telemetry.ogg",
+    url: "/audio/null-pointer-exception.wav",
     coverUrl: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=600&auto=format&fit=crop&q=80",
   },
 ];
