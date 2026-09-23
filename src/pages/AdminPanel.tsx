@@ -17,10 +17,10 @@ function StatCard({ label, value, sub, accent, icon }: { label: string; value: s
       <div className="relative">
         <div className="flex items-center gap-2">
           <span className="text-lg">{icon}</span>
-          <p className="text-xs uppercase tracking-[0.32em] text-gray-500 dark:text-slate-400">{label}</p>
+          <p className="text-xs uppercase tracking-[0.32em] text-slate-400">{label}</p>
         </div>
-        <div className="mt-3 text-3xl font-bold text-gray-900 dark:text-white">{value}</div>
-        <p className="mt-2 text-sm text-gray-600 dark:text-slate-300">{sub}</p>
+        <div className="mt-3 text-3xl font-bold text-white">{value}</div>
+        <p className="mt-2 text-sm text-slate-300">{sub}</p>
       </div>
     </GlassPanel>
   );

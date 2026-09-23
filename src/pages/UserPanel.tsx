@@ -125,27 +125,27 @@ export default function UserPanel() {
                   <input
                     value={editName}
                     onChange={(e) => setEditName(e.target.value)}
-                    className="rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 px-4 py-2 text-lg font-bold text-gray-900 dark:text-white outline-none focus:border-cyan-500/40 dark:focus:border-cyan-400/40"
+                    className="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-lg font-bold text-white outline-none focus:border-cyan-400/40"
                     autoFocus
                   />
                   <button
                     type="button"
                     onClick={handleSaveName}
-                    className="rounded-xl bg-cyan-600/10 dark:bg-cyan-500/20 px-4 py-2 text-sm text-cyan-700 dark:text-cyan-300 transition hover:bg-cyan-600/20 dark:hover:bg-cyan-500/30"
+                    className="rounded-xl bg-cyan-500/20 px-4 py-2 text-sm text-cyan-300 transition hover:bg-cyan-500/30"
                   >
                     Save
                   </button>
                   <button
                     type="button"
                     onClick={() => setEditing(false)}
-                    className="rounded-xl bg-gray-100 dark:bg-white/5 px-3 py-2 text-sm text-gray-500 dark:text-slate-400 transition hover:bg-gray-200 dark:hover:bg-white/10"
+                    className="rounded-xl bg-white/5 px-3 py-2 text-sm text-slate-400 transition hover:bg-white/10 hover:text-white"
                   >
                     ✕
                   </button>
                 </div>
               ) : (
                 <div className="flex items-center gap-3">
-                  <h1 className="text-2xl font-bold text-gray-900 dark:text-white sm:text-3xl">{username}</h1>
+                  <h1 className="text-2xl font-bold text-white sm:text-3xl">{username}</h1>
                   <button
                     type="button"
                     onClick={() => { setEditing(true); setEditName(username); }}
@@ -188,9 +188,9 @@ export default function UserPanel() {
 
         {/* XP Progress Bar */}
         <div className="mt-8 space-y-3">
-          <div className="flex items-center justify-between text-sm text-gray-600 dark:text-slate-300">
+          <div className="flex items-center justify-between text-sm text-slate-300">
             <span>{xp} XP collected</span>
-            <span className="text-cyan-600 dark:text-cyan-300">{xpToNext} XP to Level {level + 1}</span>
+            <span className="text-cyan-300">{xpToNext} XP to Level {level + 1}</span>
           </div>
           <div className="progress-3d h-4 rounded-full bg-white/10 overflow-hidden">
             <motion.div
@@ -206,31 +206,31 @@ export default function UserPanel() {
       {/* Stats Grid */}
       <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
         <GlassPanel className="p-5">
-          <p className="text-xs uppercase tracking-[0.32em] text-gray-500 dark:text-slate-400">Campaign Progress</p>
-          <div className="mt-3 text-3xl font-bold text-gray-900 dark:text-white">{progressPercent}%</div>
-          <p className="mt-2 text-sm text-gray-600 dark:text-slate-300">{completedChallengeIds.length}/{challenges.length} missions</p>
+          <p className="text-xs uppercase tracking-[0.32em] text-slate-400">Campaign Progress</p>
+          <div className="mt-3 text-3xl font-bold text-white">{progressPercent}%</div>
+          <p className="mt-2 text-sm text-slate-300">{completedChallengeIds.length}/{challenges.length} missions</p>
         </GlassPanel>
         <GlassPanel className="p-5">
-          <p className="text-xs uppercase tracking-[0.32em] text-gray-500 dark:text-slate-400">🔥 Daily Streak</p>
-          <div className="mt-3 text-3xl font-bold text-gray-900 dark:text-white streak-fire">{streak}d</div>
-          <p className="mt-2 text-sm text-gray-600 dark:text-slate-300">Keep the fire burning!</p>
+          <p className="text-xs uppercase tracking-[0.32em] text-slate-400">🔥 Daily Streak</p>
+          <div className="mt-3 text-3xl font-bold text-white streak-fire">{streak}d</div>
+          <p className="mt-2 text-sm text-slate-300">Keep the fire burning!</p>
         </GlassPanel>
         <GlassPanel className="p-5">
-          <p className="text-xs uppercase tracking-[0.32em] text-gray-500 dark:text-slate-400">🪙 Coins</p>
-          <div className="mt-3 text-3xl font-bold text-gray-900 dark:text-white">{coins}</div>
-          <p className="mt-2 text-sm text-gray-600 dark:text-slate-300">For inventory & rewards</p>
+          <p className="text-xs uppercase tracking-[0.32em] text-slate-400">🪙 Coins</p>
+          <div className="mt-3 text-3xl font-bold text-white">{coins}</div>
+          <p className="mt-2 text-sm text-slate-300">For inventory & rewards</p>
         </GlassPanel>
         <GlassPanel className="p-5">
-          <p className="text-xs uppercase tracking-[0.32em] text-gray-500 dark:text-slate-400">Code Runs</p>
-          <div className="mt-3 text-3xl font-bold text-gray-900 dark:text-white">{runCount}</div>
-          <p className="mt-2 text-sm text-gray-600 dark:text-slate-300">{failedRuns} debug attempts</p>
+          <p className="text-xs uppercase tracking-[0.32em] text-slate-400">Code Runs</p>
+          <div className="mt-3 text-3xl font-bold text-white">{runCount}</div>
+          <p className="mt-2 text-sm text-slate-300">{failedRuns} debug attempts</p>
         </GlassPanel>
       </div>
 
       {/* Achievements */}
       <GlassPanel className="p-6 sm:p-8">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Achievements</h3>
-        <p className="mt-1 text-sm text-gray-500 dark:text-slate-400">Milestones that reward growth and persistence</p>
+        <h3 className="text-lg font-semibold text-white">Achievements</h3>
+        <p className="mt-1 text-sm text-slate-400">Milestones that reward growth and persistence</p>
         <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {achievements.map((achievement) => (
             <div
@@ -243,19 +243,19 @@ export default function UserPanel() {
               )}
             >
               <div className="flex items-center justify-between gap-4">
-                <div className="text-base font-semibold text-gray-900 dark:text-white">{achievement.title}</div>
+                <div className="text-base font-semibold text-white">{achievement.title}</div>
                 <span
                   className={cn(
                     "rounded-full px-2.5 py-1 text-[10px] uppercase tracking-[0.24em]",
                     achievement.unlocked 
-                      ? "bg-cyan-600/10 dark:bg-white/15 text-cyan-700 dark:text-cyan-200" 
-                      : "bg-gray-200 dark:bg-white/8 text-gray-500 dark:text-slate-500"
+                      ? "bg-white/15 text-cyan-200" 
+                      : "bg-white/8 text-slate-400"
                   )}
                 >
                   {achievement.unlocked ? "Unlocked" : "Locked"}
                 </span>
               </div>
-              <p className="mt-2 text-sm text-gray-600 dark:text-slate-300">{achievement.description}</p>
+              <p className="mt-2 text-sm text-slate-300">{achievement.description}</p>
             </div>
           ))}
         </div>
@@ -277,22 +277,22 @@ export default function UserPanel() {
               );
 
             return (
-              <div key={world.id} className="flex items-center justify-between rounded-2xl border border-gray-200 dark:border-white/10 bg-gray-50/50 dark:bg-white/5 px-5 py-4">
+              <div key={world.id} className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-5 py-4">
                 <div className="flex items-center gap-3">
                   <span className="text-xl">{world.icon}</span>
                   <div>
-                    <div className="text-sm font-medium text-gray-900 dark:text-white">{world.name}</div>
-                    <div className="text-xs text-gray-500 dark:text-slate-400">{world.topic}</div>
+                    <div className="text-sm font-medium text-white">{world.name}</div>
+                    <div className="text-xs text-slate-400">{world.topic}</div>
                   </div>
                 </div>
                 <span
                   className={cn(
                     "rounded-full px-3 py-1 text-xs uppercase tracking-[0.24em]",
                     completed
-                      ? "bg-emerald-400/15 text-emerald-600 dark:text-emerald-200"
+                      ? "bg-emerald-400/15 text-emerald-200"
                       : unlocked
-                        ? "bg-cyan-400/15 text-cyan-600 dark:text-cyan-200"
-                        : "bg-gray-200 dark:bg-white/8 text-gray-500 dark:text-slate-500"
+                        ? "bg-cyan-400/15 text-cyan-200"
+                        : "bg-white/8 text-slate-400"
                   )}
                 >
                   {completed ? "Done" : unlocked ? "Active" : "Locked"}

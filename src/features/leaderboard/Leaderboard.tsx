@@ -96,15 +96,15 @@ export default function Leaderboard() {
 
       {/* Top 10 list */}
       <GlassPanel className="overflow-hidden">
-        <div className="px-5 py-4 border-b border-white/8 flex items-center justify-between">
+        <div className="px-5 py-4 border-b border-white/10 flex items-center justify-between">
           <h3 className="text-sm font-semibold text-white">
             Top {Math.min(entries.length, 10)} Operatives
           </h3>
-          <span className="text-[10px] uppercase tracking-widest text-slate-500">
+          <span className="text-[10px] uppercase font-mono tracking-widest text-slate-400">
             {period.replace("-", " ")}
           </span>
         </div>
-        <div className="divide-y divide-gray-200 dark:divide-white/5">
+        <div className="divide-y divide-white/10">
           {entries.slice(0, 10).map((entry, i) => (
             <motion.div
               key={entry.name}
@@ -112,8 +112,8 @@ export default function Leaderboard() {
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: i * 0.04 }}
               className={cn(
-                "flex items-center justify-between px-5 py-3 transition",
-                entry.name === username ? "bg-cyan-500/10" : "hover:bg-black/[0.02] dark:hover:bg-white/[0.02]"
+                "flex items-center justify-between px-5 py-3.5 transition",
+                entry.name === username ? "bg-cyan-500/15" : "hover:bg-white/5"
               )}
             >
               <div className="flex items-center gap-4">
@@ -121,31 +121,38 @@ export default function Leaderboard() {
                   className={cn(
                     "flex h-9 w-9 items-center justify-center rounded-xl font-bold text-sm shadow",
                     entry.rank === 1
-                      ? "bg-gradient-to-br from-amber-400 to-yellow-500 text-white"
+                      ? "bg-gradient-to-br from-amber-400 to-yellow-500 text-slate-950 font-extrabold shadow-amber-500/30"
                       : entry.rank === 2
-                        ? "bg-gradient-to-br from-slate-300 to-slate-400 text-slate-900"
+                        ? "bg-gradient-to-br from-slate-200 to-slate-400 text-slate-950 font-extrabold shadow-slate-400/20"
                         : entry.rank === 3
-                          ? "bg-gradient-to-br from-orange-400 to-amber-600 text-white"
-                          : "bg-gray-100 dark:bg-white/10 text-gray-900 dark:text-white"
+                          ? "bg-gradient-to-br from-orange-400 to-amber-600 text-slate-950 font-extrabold shadow-orange-500/20"
+                          : "bg-white/10 border border-white/15 text-white font-bold"
                   )}
                 >
                   {entry.rank}
                 </div>
                 <div>
-                  <div className="text-sm font-medium text-gray-900 dark:text-white">{entry.name}</div>
-                  <div className="text-[10px] text-gray-500 dark:text-slate-500">
+                  <div className="text-sm font-semibold text-white flex items-center gap-2">
+                    <span>{entry.name}</span>
+                    {entry.name === username && (
+                      <span className="rounded-full bg-cyan-500/20 border border-cyan-400/30 px-1.5 py-0.2 text-[9px] font-mono text-cyan-300">
+                        YOU
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-xs text-slate-300 font-medium">
                     {entry.title} · Lvl {entry.level}
                   </div>
                 </div>
               </div>
               <div className="flex items-center gap-6 text-sm">
                 <div className="text-right">
-                  <div className="text-gray-900 dark:text-white font-semibold">{entry.xp.toLocaleString()}</div>
-                  <div className="text-[10px] text-gray-500 dark:text-slate-500">XP</div>
+                  <div className="text-white font-bold tracking-tight">{entry.xp.toLocaleString()}</div>
+                  <div className="text-[10px] uppercase font-mono tracking-widest text-slate-400">XP</div>
                 </div>
                 <div className="text-right hidden sm:block">
-                  <div className="text-cyan-700 dark:text-cyan-300">{entry.streak}d</div>
-                  <div className="text-[10px] text-gray-500 dark:text-slate-500">streak</div>
+                  <div className="text-cyan-300 font-bold">{entry.streak}d</div>
+                  <div className="text-[10px] uppercase font-mono tracking-widest text-slate-400">streak</div>
                 </div>
               </div>
             </motion.div>

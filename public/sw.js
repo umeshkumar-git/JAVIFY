@@ -87,6 +87,12 @@ self.addEventListener("activate", (event) => {
 // 3. Fetch Event Interception: Offline Stream Proxy & Stale-While-Revalidate
 self.addEventListener("fetch", (event) => {
   const { request } = event;
+  
+  // Guard: Only handle HTTP/HTTPS requests; ignore chrome-extension://, data:, blob:, etc.
+  if (!request.url.startsWith("http:") && !request.url.startsWith("https:")) {
+    return;
+  }
+
   const url = new URL(request.url);
 
   // A. Audio Stream Interception (/api/bff/stream/:trackId or sound streams)

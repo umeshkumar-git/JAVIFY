@@ -10,7 +10,8 @@ import {
 import { useSessionStore } from "../../store/useSessionStore";
 import { useLibraryStore } from "../../store/useLibraryStore";
 import { AudioVisualizerRenderer } from "../../core/audio/AudioVisualizer";
-import { formatDuration } from "../../utils/formatters";
+
+import { ProgressBar } from "./ProgressBar";
 
 export function AudioPlayerBar() {
   const currentTrack = useCurrentTrack();
@@ -18,10 +19,7 @@ export function AudioPlayerBar() {
   const { volume, isMuted, setVolume, toggleMute } = useAudioVolume();
   const { repeatMode, isShuffled, toggleShuffle, cycleRepeatMode } = usePlaybackModes();
 
-  const currentTime = useAudioStore((s) => s.currentTime);
-  const duration = useAudioStore((s) => s.duration);
   const togglePlayPause = useAudioStore((s) => s.togglePlayPause);
-  const seek = useAudioStore((s) => s.seek);
   const nextTrack = useAudioStore((s) => s.nextTrack);
   const previousTrack = useAudioStore((s) => s.previousTrack);
   const pipeline = useAudioStore((s) => s.pipeline);
@@ -59,19 +57,10 @@ export function AudioPlayerBar() {
     await togglePlayPause();
     if (session && isHost) {
       const nextStatus = status === "PLAYING" ? "PAUSE" : "PLAY";
-      broadcastAction(nextStatus, currentTime * 1000);
+      const currentMs = useAudioStore.getState().currentTime * 1000;
+      broadcastAction(nextStatus, currentMs);
     }
   };
-
-  const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = parseFloat(e.target.value);
-    seek(val);
-    if (session && isHost) {
-      broadcastAction("SEEK", val * 1000);
-    }
-  };
-
-  const progressPercent = duration > 0 ? (currentTime / duration) * 100 : 0;
 
   return (
     <footer
@@ -195,23 +184,14 @@ export function AudioPlayerBar() {
             </button>
           </div>
 
-          <div className="flex w-full items-center gap-3 text-xs font-mono text-slate-400">
-            <span className="w-10 text-right">{formatDuration(currentTime)}</span>
-            <div className="relative flex-1 flex items-center">
-              <input
-                type="range"
-                min={0}
-                max={duration || 100}
-                value={currentTime}
-                onChange={handleSeek}
-                className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-cyan-400 hover:h-2 transition-all"
-                style={{
-                  background: `linear-gradient(to right, #06b6d4 ${progressPercent}%, #1e293b ${progressPercent}%)`,
-                }}
-              />
-            </div>
-            <span className="w-10">{formatDuration(duration)}</span>
-          </div>
+          <ProgressBar
+            size="md"
+            onSeekEnd={(targetSeconds) => {
+              if (session && isHost) {
+                broadcastAction("SEEK", targetSeconds * 1000);
+              }
+            }}
+          />
         </div>
 
         {/* Right Section: Visualizer & Listen Together Badge & Volume */}

@@ -164,7 +164,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
       {/* 3-COLUMN VIEWPORT BODY (Zero Document Scroll, Independent Scrollers)     */}
       {/* ========================================================================= */}
       <div className="grid h-full w-full grid-cols-1 md:grid-cols-[240px_1fr] lg:grid-cols-[240px_1fr_300px] overflow-hidden min-h-0">
-        
+
         {/* ======================================================================= */}
         {/* 1. LEFT SIDEBAR: Static Primary Navigation (No Scroll Needed)          */}
         {/* ======================================================================= */}
@@ -253,7 +253,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
         >
           {/* Top Bar Header */}
           <header className="sticky top-0 z-20 flex items-center justify-between border-b border-glass-border/40 bg-midnight-950/80 backdrop-blur-2xl px-6 py-4 gap-4">
-            
+
             {/* Mobile Sidebar Hamburger Toggle */}
             <button
               type="button"

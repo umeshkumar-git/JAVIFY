@@ -122,7 +122,13 @@ export default function StreamingHubPage() {
                   album={track.album}
                   genre={track.genre}
                   isPlaying={currentTrack?.id === track.id && status === "PLAYING"}
-                  onPlay={() => setQueue(tracks, idx)}
+                  onPlay={() => {
+                    if (currentTrack?.id === track.id) {
+                      togglePlayPause();
+                    } else {
+                      setQueue(tracks, idx);
+                    }
+                  }}
                 />
               ))}
             </div>

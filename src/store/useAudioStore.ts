@@ -45,6 +45,24 @@ let globalPipeline: AudioPipeline | null = null;
 let activePlayAbortController: AbortController | null = null;
 let activeOperationId = 0;
 
+export function normalizeTrack(track: AudioTrack): AudioTrack {
+  const localMap: Record<string, string> = {
+    "trk-synth-01": "/audio/cybernetic-drift.wav",
+    "trk-ambient-02": "/audio/quantum-telemetry.wav",
+    "trk-future-03": "/audio/distributed-heartbeat.wav",
+    "trk-deep-04": "/audio/binary-monks.wav",
+    "trk-cyber-05": "/audio/null-pointer-exception.wav",
+  };
+  if (track.id && localMap[track.id]) {
+    return { ...track, url: localMap[track.id] };
+  }
+  if (track.url && track.url.includes("actions.google.com")) {
+    const matched = Object.keys(localMap).find((k) => track.id === k);
+    return { ...track, url: matched ? localMap[matched] : "/audio/cybernetic-drift.wav" };
+  }
+  return track;
+}
+
 function getOrCreatePipeline(
   set: (fn: Partial<AudioStoreState> | ((state: AudioStoreState) => Partial<AudioStoreState>)) => void,
   get: () => AudioStoreState
@@ -102,8 +120,8 @@ export const useAudioStore = create<AudioStoreState>()(
           pipeline,
 
           play: async (track?: AudioTrack) => {
-            const targetTrack = track || get().currentTrack;
-            if (!targetTrack) {
+            const rawTarget = track || get().currentTrack;
+            if (!rawTarget) {
               const { queue, queueIndex } = get();
               if (queue.length > 0) {
                 const nextIndex = queueIndex >= 0 ? queueIndex : 0;
@@ -111,6 +129,8 @@ export const useAudioStore = create<AudioStoreState>()(
               }
               return;
             }
+
+            const targetTrack = normalizeTrack(rawTarget);
 
             // Abort previous inflight playback/load request
             if (activePlayAbortController) {
@@ -120,7 +140,12 @@ export const useAudioStore = create<AudioStoreState>()(
             const currentSignal = activePlayAbortController.signal;
             const opId = ++activeOperationId;
 
-            const isNewTrack = !get().currentTrack || get().currentTrack?.id !== targetTrack.id;
+            const isNewTrack =
+              !get().currentTrack ||
+              get().currentTrack?.id !== targetTrack.id ||
+              get().currentTrack?.url !== targetTrack.url ||
+              pipeline.getCurrentTrack()?.id !== targetTrack.id ||
+              pipeline.getCurrentTrack()?.url !== targetTrack.url;
 
             try {
               if (isNewTrack) {
@@ -230,13 +255,14 @@ export const useAudioStore = create<AudioStoreState>()(
           },
 
           setQueue: (tracks: AudioTrack[], startIndex = 0) => {
+            const normalizedTracks = tracks.map(normalizeTrack);
             const isShuffled = get().isShuffled;
             if (isShuffled) {
-              const selectedTrack = tracks[startIndex];
-              const remaining = tracks.filter((_, idx) => idx !== startIndex);
+              const selectedTrack = normalizedTracks[startIndex];
+              const remaining = normalizedTracks.filter((_, idx) => idx !== startIndex);
               const shuffled = [selectedTrack, ...QueueManager.fisherYatesShuffle(remaining)].filter(Boolean);
               set({
-                originalQueue: tracks,
+                originalQueue: normalizedTracks,
                 queue: shuffled,
                 queueIndex: 0,
               });
@@ -244,9 +270,9 @@ export const useAudioStore = create<AudioStoreState>()(
                 get().play(shuffled[0]);
               }
             } else {
-              set({ originalQueue: tracks, queue: tracks, queueIndex: startIndex });
-              if (tracks[startIndex]) {
-                get().play(tracks[startIndex]);
+              set({ originalQueue: normalizedTracks, queue: normalizedTracks, queueIndex: startIndex });
+              if (normalizedTracks[startIndex]) {
+                get().play(normalizedTracks[startIndex]);
               }
             }
           },
@@ -298,12 +324,24 @@ export const useAudioStore = create<AudioStoreState>()(
       {
         name: "javify_audio_state",
         storage: createJSONStorage(() => localStorage),
+        onRehydrateStorage: () => (state) => {
+          if (!state) return;
+          if (state.currentTrack) {
+            state.currentTrack = normalizeTrack(state.currentTrack);
+          }
+          if (Array.isArray(state.queue)) {
+            state.queue = state.queue.map(normalizeTrack);
+          }
+          if (Array.isArray(state.originalQueue)) {
+            state.originalQueue = state.originalQueue.map(normalizeTrack);
+          }
+        },
         partialize: (state) => ({
           volume: state.volume,
           isMuted: state.isMuted,
-          currentTrack: state.currentTrack,
-          queue: state.queue,
-          originalQueue: state.originalQueue,
+          currentTrack: state.currentTrack ? normalizeTrack(state.currentTrack) : null,
+          queue: state.queue.map(normalizeTrack),
+          originalQueue: state.originalQueue.map(normalizeTrack),
           queueIndex: state.queueIndex,
           repeatMode: state.repeatMode,
           isShuffled: state.isShuffled,
